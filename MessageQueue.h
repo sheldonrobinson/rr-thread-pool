@@ -1,3 +1,32 @@
+/**
+Copyright (c) 2013, Riccardo Ressi
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+Neither the name of Riccardo Ressi nor the names of its contributors may be
+used to endorse or promote products derived from this software without specific
+prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifndef MESSAGEQUEUE_H
 #define MESSAGEQUEUE_H
 
@@ -38,10 +67,10 @@ public:
     };
 
     /**
-     * @brief IMessagePtr Shared pointer for messages.
+     * @brief Shared pointer for messages.
      *
      * Message's ownership is shared between the user and the queue, for this
-     * reason methods to push/pop messages requires this typedef.
+     * reason methods to push/pop messages require this typedef.
      */
     typedef std::shared_ptr< IMessage > IMessagePtr;
 
@@ -65,6 +94,23 @@ public:
     { }
 
     /**
+     * @brief Pushes one message into the queue.
+     *
+     * @param message The message to be inserted.
+     *
+     * @return
+     * - On success, the number of messages contained by the queue after the
+     *   insertion, that is at least @a one.
+     * - On failure, @a zero. This may happen if the maximum allowed capacity
+     *   for the queue have been reached.
+     *
+     * @pre
+     * - The parameter message is not null.
+     * - The queue have not been cancelled.
+     */
+    virtual std::size_t push( IMessagePtr message ) = 0;
+
+    /**
      * @brief Pops one message from the queue.
      *
      * @param[out] message Smart pointer that will be reset with the popped
@@ -75,9 +121,9 @@ public:
      *        by another thread or until the queue is not cancelled.
      *
      * @return
-     * - On failure, @a zero (parameter message is not touched in that case).
      * - On success, the number of messages contained by the queue before the
-     *   extraction that is at least @a one.
+     *   extraction, that is at least @a one.
+     * - On failure, @a zero (parameter message is not touched in that case).
      *
      * @pre
      * - The queue have not been cancelled.
@@ -85,28 +131,11 @@ public:
     virtual std::size_t pop( IMessagePtr& message, bool block ) = 0;
 
     /**
-     * @brief Pushes one message into the queue.
-     *
-     * @param message The message to be inserted.
-     *
-     * @return
-     * - On failure, @a zero. This may happen if the maximum allowed capacity
-     *   for the queue have been reached.
-     * - On success, the number of messages contained by the queue after the
-     *   insertion that is at least @a one.
-     *
-     * @pre
-     * - The parameter message is not null.
-     * - The queue have not been cancelled.
-     */
-    virtual std::size_t push( IMessagePtr message ) = 0;
-
-    /**
      * @brief Cancel the queue functionality indefinitely releasing any blocked
      * thread.
      *
-     * The cancelled status is not reversible and is meant mainly as an action to
-     * be performed before the queue destruction.
+     * The cancelled status is not reversible and is meant mainly as an action
+     * to be performed before the queue destruction.
      *
      * @warning Doesn't wait for the peer threads to be released, just broadcast
      * a signal to them.
@@ -133,6 +162,8 @@ public:
      * This method is meant to be used when the user uses the queue with one
      * single derived class and hence don't need to manually dynamic cast every
      * popped message from the generic @a IMessage.
+     *
+     * @copydetails pop(IMessagePtr& message, bool block)
      */
     template< typename Derived >
     std::size_t
@@ -177,7 +208,7 @@ public:
      *        possible.
      */
     explicit inline MessageQueue( std::size_t max_capacity
-                                  = std::numeric_limits< std::size_t >::max( ) );
+                                 = std::numeric_limits< std::size_t >::max( ) );
 
     /**
      * @brief Pops one message from the queue.
@@ -275,7 +306,8 @@ MessageQueue< M >::pop( M& dst_message, bool blocking )
     {
         assert( nullptr != new_message.get( ) );
 
-        MessageImpl< M >* tmp = dynamic_cast< MessageImpl< M >* >( new_message.get( ) );
+        MessageImpl< M >* tmp
+                      = dynamic_cast< MessageImpl< M >* >( new_message.get( ) );
         assert( tmp != nullptr );
 
         dst_message = tmp->m_payload;
