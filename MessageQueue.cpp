@@ -28,34 +28,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "MessageQueue.h"
+#include "Mutex.h"
+#include "Cond.h"
 
 #include <deque>
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <vector>
-
 #include <assert.h>
-
-#include <ThreadPosix.h>
 
 // -----------------------------------------------------------------------------
 
-class MessageQueuePosix: public IMessageQueue
+class MessageQueueImpl: public IMessageQueue
 {
-    typedef std::deque< IMessagePtr > Queue;
-    typedef Locker< MutexPosix > Locker;
+    typedef Locker< Mutex > Locker;
 
     std::size_t m_max_capacity;
     volatile bool m_cancelled;
 
-    mutable MutexPosix m_mutex;
-    mutable CondPosix m_cond;
-    Queue m_queue;
+    mutable Mutex m_mutex;
+    mutable Cond m_cond;
+    std::deque< Message >  m_queue;
 
 public:
 
-    MessageQueuePosix( std::size_t max_capacity )
+    MessageQueueImpl( std::size_t max_capacity )
         :
         m_max_capacity( max_capacity ),
         m_cancelled( false )
@@ -64,17 +58,17 @@ public:
     // -------------------------------------------------------------------------
 
     virtual
-    ~MessageQueuePosix( )
+    ~MessageQueueImpl( )
     { }
 
     // -------------------------------------------------------------------------
 
     virtual std::size_t
-    pop( IMessagePtr& message, bool blocking )
+    pop( Message& message, bool blocking )
     {
         std::size_t ret = 0;
 
-        // Non-blocking implementation:
+        // Blocking implementation:
         if ( blocking )
         {
             Locker locker( m_mutex );
@@ -89,7 +83,7 @@ public:
                     break;
                 }
 
-                m_cond.wait( m_mutex );
+                m_cond.wait( m_mutex ); // Performs unlock-wait-lock op.
                 if ( m_cancelled )
                 {
                     break;
@@ -106,8 +100,6 @@ public:
                 message = m_queue.front( );
                 m_queue.pop_front( );
             }
-
-            return ret;
         }
 
         return ret;
@@ -116,7 +108,7 @@ public:
     // -------------------------------------------------------------------------
 
     virtual std::size_t
-    push( IMessagePtr message )
+    push( Message message )
     {
         std::size_t ret = 0;
         Locker locker( m_mutex );
@@ -175,7 +167,7 @@ public:
 IMessageQueue*
 IMessageQueue::create( std::size_t max_capacity )
 {
-    return new MessageQueuePosix( max_capacity );
+    return new MessageQueueImpl( max_capacity );
 }
 
 // -----------------------------------------------------------------------------

@@ -27,30 +27,50 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "MessageQueue.h"
-#include "ThreadPool.h"
 #include "Trace.h"
 
+#include "Mutex.h"
+
 #include <iostream>
-#include <memory>
-#include <string>
-#include <sstream>
-#include <vector>
 
 // -----------------------------------------------------------------------------
 
-void test_Thread( );
-void test_MessageQueue( );
-void test_ThreadPool( );
-
-int main(int argc, char *argv[])
+namespace
 {
-    (void) argc;
-    (void) argv;
-
-    test_Thread( );
-    test_MessageQueue( );
-    test_ThreadPool( );
-
-    return 0;
+    volatile bool is_active = false;
+    Mutex mutex;
 }
+
+// -----------------------------------------------------------------------------
+
+void
+trace_set( bool active )
+{
+    is_active = active;
+}
+
+// -----------------------------------------------------------------------------
+
+void
+trace( std::string message )
+{
+    if ( is_active )
+    {
+        Locker< Mutex > locker( mutex );
+        std::cerr << message << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+void
+trace( int id, std::string message )
+{
+    if ( is_active )
+    {
+        Locker< Mutex > locker( mutex );
+        std::cerr << id << ": " << message << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------

@@ -29,8 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ThreadPool.h"
 
+#include "Trace.h"
 #include "MessageQueue.h"
-#include "ThreadPosix.h"
+#include "Mutex.h"
 
 #include <iostream>
 #include <string>
@@ -43,19 +44,21 @@ namespace
 
 class TestTask
     :
-    public IThreadPool::ITask
+    public ITask
 {
 
     int m_id;
-    MutexPosix& m_mutex;
+    Mutex& m_mutex;
     int& m_instance_counter;
     int& m_execution_counter;
     int m_step;
 
+    bool m_trace;
+
 public:
 
     TestTask( int id,
-              MutexPosix& mutex,
+              Mutex& mutex,
               int& instance_counter,
               int& execution_counter )
         :
@@ -63,50 +66,52 @@ public:
         m_mutex( mutex ),
         m_instance_counter( instance_counter ),
         m_execution_counter( execution_counter ),
-        m_step( 0 )
+        m_step( 0 ),
+        m_trace( ( id % 100000 ) == 0 )
     {
         {
-            Locker< MutexPosix > locker( m_mutex );
+            Locker< Mutex > locker( m_mutex );
             ++m_instance_counter;
         }
 
-        trace( "created" );
+        trace_opt( "created" );
     }
 
-    virtual ~TestTask( )
+    virtual
+    ~TestTask( )
     {
         {
-            Locker< MutexPosix > locker( m_mutex );
+            Locker< Mutex > locker( m_mutex );
             assert( m_instance_counter > 0 );
             --m_instance_counter;
         }
 
-        trace( "destroyed" );
+        trace_opt( "destroyed" );
 
         assert( m_step == 1 );
         ++m_step;
     }
 
-    virtual void execute( )
+    virtual void
+    execute( )
     {
         {
-            Locker< MutexPosix > locker( m_mutex );
+            Locker< Mutex > locker( m_mutex );
             ++m_execution_counter;
         }
 
-        trace( "executed" );
+        trace_opt( "executed" );
 
         assert( m_step == 0 );
         ++m_step;
     }
 
-    void
-    trace( std::string message )
+    virtual void
+    trace_opt( std::string message ) const
     {
-        if ( m_id % 100000 == 0 )
+        if ( m_trace )
         {
-            Locker< MutexPosix > locker( m_mutex );
-            std::cerr << m_id << ": " << message << std::endl;
+            trace( m_id, message );
         }
     }
 
@@ -126,7 +131,7 @@ test_ThreadPool( )
     std::unique_ptr< IThreadPool > pool(
                 IThreadPool::create( NUM_THREADS, QUEUE_CAPACITY ) );
 
-    MutexPosix mutex;
+    Mutex mutex;
     int num_tasks_in = NUM_TASKS;
     int num_tasks_out = NUM_TASKS;
     int instance_counter = 0;
@@ -140,10 +145,8 @@ test_ThreadPool( )
         {
             int id = NUM_TASKS - num_tasks_in;
 
-            IThreadPool::ITaskPtr task( new TestTask( id,
-                                                      mutex,
-                                                      instance_counter,
-                                                      execution_counter ) );
+            Task task( new TestTask( id, mutex, instance_counter,
+                                     execution_counter ) );
 
             std::size_t num = pool->push( task );
             if ( num > 0 )
@@ -162,7 +165,7 @@ test_ThreadPool( )
             std::size_t num = pool->pop( task, num_tasks_in > 0 );
             if( num > 0 )
             {
-                task->trace( "collected" );
+                task->trace_opt( "collected" );
                 --num_tasks_out;
             }
             else

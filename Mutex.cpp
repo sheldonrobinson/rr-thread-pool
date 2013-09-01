@@ -27,30 +27,59 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "MessageQueue.h"
-#include "ThreadPool.h"
-#include "Trace.h"
+#include "Mutex.h"
 
-#include <iostream>
-#include <memory>
-#include <string>
-#include <sstream>
-#include <vector>
+// ------------------------------------------------------------------------
+
+#include <pthread.h>
+
+class MutexPosixImpl
+    : public IMutex
+{
+
+public:
+
+    MutexPosixImpl( )
+    {
+        ::pthread_mutex_init( &m_mutex, nullptr );
+    }
+
+    virtual
+    ~MutexPosixImpl( )
+    {
+        ::pthread_mutex_destroy( &m_mutex );
+    }
+
+    virtual void
+    lock( )
+    {
+        ::pthread_mutex_lock( &m_mutex );
+    }
+
+    virtual void
+    unlock( )
+    {
+        ::pthread_mutex_unlock( &m_mutex );
+    }
+
+    virtual void*
+    handle( )
+    {
+        return &m_mutex;
+    }
+
+private:
+
+    pthread_mutex_t m_mutex;
+
+};
 
 // -----------------------------------------------------------------------------
 
-void test_Thread( );
-void test_MessageQueue( );
-void test_ThreadPool( );
-
-int main(int argc, char *argv[])
+IMutex*
+IMutex::create( )
 {
-    (void) argc;
-    (void) argv;
-
-    test_Thread( );
-    test_MessageQueue( );
-    test_ThreadPool( );
-
-    return 0;
+    return new MutexPosixImpl( );
 }
+
+// -----------------------------------------------------------------------------

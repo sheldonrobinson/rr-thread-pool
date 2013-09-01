@@ -30,27 +30,61 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ThreadPool.h"
 
 #include "MessageQueue.h"
-#include "ThreadPosix.h"
+#include "Thread.h"
 
 #include <iostream>
 #include <string>
 #include <vector>
 
+// -----------------------------------------------------------------------------
+
+class ThreadPoolWorker
+    :
+    public ITask
+{
+
+    IMessageQueue& m_input_queue;
+    IMessageQueue& m_output_queue;
+
+public:
+
+    ThreadPoolWorker( IMessageQueue& input_queue,
+                      IMessageQueue& output_queue )
+        : m_input_queue( input_queue ),
+          m_output_queue( output_queue )
+    { }
+
+    virtual
+    ~ThreadPoolWorker( )
+    { }
+
+    virtual void
+    execute( )
+    {
+        // For each fetched message:
+        Task task;
+        while( m_input_queue.pop( task, true ) )
+        {
+            task->execute( );
+            m_output_queue.push( task );
+        }
+
+        assert( m_input_queue.is_cancelled( ) );
+    }
+
+};
 
 // -----------------------------------------------------------------------------
 
 class ThreadPoolPosix
     :
-    public IThreadPool,
-    private ThreadPosix::IRunner
-{
-    typedef std::shared_ptr< ThreadPosix > ThreadPtr;
-    typedef std::vector< ThreadPtr > Pool;
+    public IThreadPool
+{    
 
-    Pool m_threads;
+    std::vector< Thread > m_threads;
     std::unique_ptr< IMessageQueue > m_input_queue;
     std::unique_ptr< IMessageQueue > m_output_queue;
-    bool m_cancelled;
+    volatile bool m_cancelled;
 
 public:
 
@@ -64,10 +98,14 @@ public:
         m_output_queue.reset( IMessageQueue::create( ) );
 
         // Creates the threads:
-        m_threads.resize( num_threads );
-        for( auto& thread: m_threads )
+        m_threads.reserve( num_threads );
+        for( std::size_t i = 0; i < num_threads; ++i )
         {
-            thread.reset( new ThreadPosix( *this ) );
+            Task worker( new ThreadPoolWorker( *m_input_queue,
+                                               *m_output_queue ) );
+
+            Thread thread_worker( IThread::create( worker ) );
+            m_threads.push_back( thread_worker );
         }
     }
 
@@ -78,7 +116,7 @@ public:
     }
 
     virtual std::size_t
-    push( ITaskPtr task )
+    push( Task task )
     {
         // Precondition verification:
         assert( nullptr != task.get( ) );
@@ -89,7 +127,7 @@ public:
     }
 
     virtual std::size_t
-    pop( ITaskPtr& task, bool blocking )
+    pop( Task& task, bool blocking )
     {
         // Precondition verification:
         assert( !m_cancelled );
@@ -108,7 +146,7 @@ public:
     virtual void
     join( )
     {
-        // Cancel the input queue in order to terminate all wotkers:
+        // Cancel the input queue in order to terminate all workers:
         cancel( );
 
         // Joins all workers threads:
@@ -118,32 +156,11 @@ public:
         }
 
         // Transfers all pending tasks from the input queue to the output one:
-        ITaskPtr task;
+        Task task;
         while( m_input_queue->pop( task, false ) > 0 )
         {
             m_output_queue->push( task );
         }
-    }
-
-private:
-
-    virtual void
-    run( ThreadPosix& thread )
-    {
-        (void) thread;
-
-        assert( nullptr != m_input_queue.get( ) );
-        assert( nullptr != m_output_queue.get( ) );
-
-        // For each fetched message:
-        ITaskPtr task;
-        while( m_input_queue->pop( task, true ) )
-        {
-            task->execute( );
-            m_output_queue->push( task );
-        }
-
-        assert( m_input_queue->is_cancelled( ) );
     }
 
 };

@@ -27,30 +27,69 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "MessageQueue.h"
-#include "ThreadPool.h"
-#include "Trace.h"
-
-#include <iostream>
+#include <assert.h>
 #include <memory>
-#include <string>
-#include <sstream>
-#include <vector>
+
+#include "Message.h"
+
+#ifndef TASK_H
+#define TASK_H
+
+// ------------------------------------------------------------------------
+
+class ITask;
+typedef std::shared_ptr< ITask > Task;
+
+/**
+ * @brief Abstract class to be implemented to describe a task that need to be
+ * executed.
+ */
+class ITask
+    : public IMessage
+{
+
+public:
+
+    /**
+     * @brief Destructor.
+     */
+    virtual ~ITask( )
+    { }
+
+    /**
+     * @brief Executes the task.
+     */
+    virtual void execute( ) = 0;
+
+    /**
+     * @brief Cancels the task.
+     */
+    virtual void cancel( )
+    { }
+
+};
 
 // -----------------------------------------------------------------------------
 
-void test_Thread( );
-void test_MessageQueue( );
-void test_ThreadPool( );
-
-int main(int argc, char *argv[])
+template< typename Predicate >
+class TaskFunc
+    : public ITask
 {
-    (void) argc;
-    (void) argv;
+    Predicate& m_predicate;
 
-    test_Thread( );
-    test_MessageQueue( );
-    test_ThreadPool( );
+public:
 
-    return 0;
-}
+    TaskFunc( Predicate& predicate )
+        : m_predicate( predicate )
+    { }
+
+    virtual void execute( )
+    {
+        m_predicate( );
+    }
+
+};
+
+// -----------------------------------------------------------------------------
+
+#endif // THREAD_H

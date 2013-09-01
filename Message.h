@@ -27,30 +27,34 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "MessageQueue.h"
-#include "ThreadPool.h"
-#include "Trace.h"
-
-#include <iostream>
+#include <assert.h>
 #include <memory>
-#include <string>
-#include <sstream>
-#include <vector>
+
+#ifndef MESSAGE_H
+#define MESSAGE_H
+
+// ------------------------------------------------------------------------
+
+class IMessage;
+typedef std::shared_ptr< IMessage > Message;
+
+/**
+ * @brief Abstract class to be implemented to describe a Message that need to be
+ * executed.
+ */
+class IMessage
+{
+
+public:
+
+    /**
+     * @brief Destructor.
+     */
+    virtual ~IMessage( )
+    { }
+
+};
 
 // -----------------------------------------------------------------------------
 
-void test_Thread( );
-void test_MessageQueue( );
-void test_ThreadPool( );
-
-int main(int argc, char *argv[])
-{
-    (void) argc;
-    (void) argv;
-
-    test_Thread( );
-    test_MessageQueue( );
-    test_ThreadPool( );
-
-    return 0;
-}
+#endif // Message_H

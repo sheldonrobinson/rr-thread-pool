@@ -30,6 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MESSAGEQUEUE_H
 #define MESSAGEQUEUE_H
 
+#include "Message.h"
+
+#include <cstddef>
 #include <limits>
 #include <memory>
 
@@ -46,33 +49,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * The class is defined as a pure abstract class with a factory method
  * (see @ref IMessageQueue::create) to build platform-specific implementations
  * of the queue while maintaining a platform-agnostic interface.
+ *
+ * @note
+ * - Only one method of this class can (optionaly) block the calling thread:
+ *   @ref IMessageQueue::pop.
+ * - This class is 100% thread safe.
  */
 class IMessageQueue
 {
 
 public:
-
-    /**
-     * @brief Abstract class meant to be derived by every queued message.
-     */
-    class IMessage
-    {
-
-    public:
-
-        /**
-         * @brief Destructor.
-         */
-        virtual ~IMessage( ) { }
-    };
-
-    /**
-     * @brief Shared pointer for messages.
-     *
-     * Message's ownership is shared between the user and the queue, for this
-     * reason methods to push/pop messages require this typedef.
-     */
-    typedef std::shared_ptr< IMessage > IMessagePtr;
 
     /**
      * @brief Factory method to create a message queue implemented for the
@@ -85,7 +71,7 @@ public:
      * @return The newly created message queue.
      */
     static IMessageQueue* create( std::size_t max_capacity
-                                  = std::numeric_limits< std::size_t >::max( ) );
+                                 = std::numeric_limits< std::size_t >::max( ) );
 
     /**
      * @brief Destructor.
@@ -108,7 +94,7 @@ public:
      * - The parameter message is not null.
      * - The queue have not been cancelled.
      */
-    virtual std::size_t push( IMessagePtr message ) = 0;
+    virtual std::size_t push( Message message ) = 0;
 
     /**
      * @brief Pops one message from the queue.
@@ -116,9 +102,9 @@ public:
      * @param[out] message Smart pointer that will be reset with the popped
      *             message in case of success.
      *
-     * @param block If set to @a true the method blocks the current thread
-     *        indefinitely until a new message is pushed into the queue
-     *        by another thread or until the queue is not cancelled.
+     * @param blocking If set to @a true the method blocks the current thread
+     *        indefinitely until a new message is pushed into the queue by
+     *        another thread or until the queue is not cancelled.
      *
      * @return
      * - On success, the number of messages contained by the queue before the
@@ -128,7 +114,7 @@ public:
      * @pre
      * - The queue have not been cancelled.
      */
-    virtual std::size_t pop( IMessagePtr& message, bool block ) = 0;
+    virtual std::size_t pop( Message& message, bool blocking ) = 0;
 
     /**
      * @brief Cancel the queue functionality indefinitely releasing any blocked
@@ -137,7 +123,7 @@ public:
      * The cancelled status is not reversible and is meant mainly as an action
      * to be performed before the queue destruction.
      *
-     * @warning Doesn't wait for the peer threads to be released, just broadcast
+     * @note Doesn't wait for the peer threads to be released, just broadcast
      * a signal to them.
      */
     virtual void cancel( ) = 0;
@@ -163,19 +149,19 @@ public:
      * single derived class and hence don't need to manually dynamic cast every
      * popped message from the generic @a IMessage.
      *
-     * @copydetails pop(IMessagePtr& message, bool block)
+     * @copydetails pop(Message& message, bool blocking)
      */
     template< typename Derived >
     std::size_t
-    pop( std::shared_ptr< Derived > &message, bool blocking )
+    pop( std::shared_ptr< Derived >& message, bool blocking )
     {
-        IMessagePtr message_tmp;
-        std::size_t ret = pop( message_tmp, blocking );
+        Message abstract_message;
+        std::size_t ret = pop( abstract_message, blocking );
         if ( ret > 0 )
         {
-            assert( message_tmp.get() != nullptr );
-            message = std::dynamic_pointer_cast< Derived >( message_tmp );
-            assert( message.get() != nullptr );
+            assert( abstract_message.get() != nullptr );
+            message = std::dynamic_pointer_cast< Derived >( abstract_message );
+            assert( message.get() == abstract_message.get( ) );
         }
 
         return ret;
@@ -193,9 +179,14 @@ public:
  * communication and syncronization between two or more threads.
  *
  * The implementaion of this template is based on @ref IMessageQueue class.
+ *
+ * @note
+ * - Only one method of this class can (optionaly) block the calling thread:
+ *   @ref IMessageQueue::pop.
+ * - This class is 100% thread safe.
  */
 template< typename M >
-class MessageQueue
+class MessageQueueT
 {
 
 public:
@@ -207,7 +198,7 @@ public:
      *        the same time. By default this limit is relaxed as much as
      *        possible.
      */
-    explicit inline MessageQueue( std::size_t max_capacity
+    explicit inline MessageQueueT( std::size_t max_capacity
                                  = std::numeric_limits< std::size_t >::max( ) );
 
     /**
@@ -263,12 +254,11 @@ public:
 
 private:
 
-    std::unique_ptr< IMessageQueue > m_impl;
+    std::shared_ptr< IMessageQueue > m_impl;
 
     template < typename P >
     class MessageImpl
-        :
-        public IMessageQueue::IMessage
+        : public IMessage
     {
 
     public:
@@ -288,29 +278,28 @@ private:
 // ----------------------------------------------------------------------------
 
 template< typename M >
-MessageQueue< M >::MessageQueue( std::size_t max_capacity )
-{
-    m_impl.reset( IMessageQueue::create( max_capacity ) );
-}
+MessageQueueT< M >::MessageQueueT( std::size_t max_capacity )
+    : m_impl( IMessageQueue::create( max_capacity ) )
+{ }
 
 // ----------------------------------------------------------------------------
 
 template< typename M >
 std::size_t
-MessageQueue< M >::pop( M& dst_message, bool blocking )
+MessageQueueT< M >::pop( M& dst_message, bool blocking )
 {
-    IMessageQueue::IMessagePtr new_message;
-    std::size_t ret = m_impl->pop( new_message, blocking );
+    Message abstract_message;
+    std::size_t ret = m_impl->pop( abstract_message, blocking );
 
     if ( ret > 0 )
     {
-        assert( nullptr != new_message.get( ) );
+        assert( nullptr != abstract_message.get( ) );
 
-        MessageImpl< M >* tmp
-                      = dynamic_cast< MessageImpl< M >* >( new_message.get( ) );
-        assert( tmp != nullptr );
+        auto message =
+              std::dynamic_pointer_cast< MessageImpl< M > >( abstract_message );
+        assert( message.get( ) == abstract_message.get( ) );
 
-        dst_message = tmp->m_payload;
+        dst_message = message->m_payload;
     }
 
     return ret;
@@ -320,9 +309,9 @@ MessageQueue< M >::pop( M& dst_message, bool blocking )
 
 template< typename M >
 std::size_t
-MessageQueue< M >::push( const M& message )
+MessageQueueT< M >::push( const M& message )
 {
-    IMessageQueue::IMessagePtr new_message( new MessageImpl< M >( message ) );
+    Message new_message( new MessageImpl< M >( message ) );
 
     return m_impl->push( new_message );
 }
@@ -331,7 +320,7 @@ MessageQueue< M >::push( const M& message )
 
 template< typename M >
 void
-MessageQueue< M >::cancel( )
+MessageQueueT< M >::cancel( )
 {
     m_impl->cancel( );
 }
@@ -340,7 +329,7 @@ MessageQueue< M >::cancel( )
 
 template< typename M >
 bool
-MessageQueue< M >::is_cancelled( ) const
+MessageQueueT< M >::is_cancelled( ) const
 {
     return m_impl->is_cancelled( );
 }
@@ -349,7 +338,7 @@ MessageQueue< M >::is_cancelled( ) const
 
 template< typename M >
 std::size_t
-MessageQueue< M >::size( ) const
+MessageQueueT< M >::size( ) const
 {
     return m_impl->size( );
 }

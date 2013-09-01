@@ -30,7 +30,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TTHREADPOOL_H
 #define TTHREADPOOL_H
 
+#include "MessageQueue.h"
+#include "Task.h"
+
+#include <cstddef>
+#include <limits>
+#include <memory>
+
 // ----------------------------------------------------------------------------
+
+class IThreadPool;
+typedef std::shared_ptr< IThreadPool > ThreadPool;
 
 /**
  * @brief General pourpose thread pool for inter-thread communication.
@@ -38,6 +48,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * The class is defined as a pure abstract class with a factory method
  * (see @ref IMessageQueue::create) to build platform-specific implementations
  * of the queue while maintaining a platform-agnostic interface.
+ *
+ * The class is 100% thread safe.
  */
 class IThreadPool
 {
@@ -45,38 +57,8 @@ class IThreadPool
 public:
 
     /**
-     * @brief Abstract class meant to be derived by every queued task.
-     */
-    class ITask
-        : public IMessageQueue::IMessage
-    {
-
-    public:
-
-        /**
-         * @brief Destructror.
-         */
-        virtual ~ITask() { }
-
-        /**
-         * @brief Executes one task.
-         */
-        virtual void execute( ) = 0;
-    };
-
-    /**
-     * @brief Shared pointer for tasks.
-     *
-     * Message's ownership is shared between the user and the queue, for this
-     * reason methods to push/pop messages require this typedef.
-     */
-    typedef std::shared_ptr< ITask > ITaskPtr;
-
-public:
-
-    /**
-     * @brief Factory method to create a message queue implemented for the
-     * current platform.
+     * @brief Factory method to create a thread pool implemented for the current
+     * platform.
      *
      * @param num_threads The number of threads the pool should use
      *        concurrently.
@@ -111,7 +93,7 @@ public:
      * - The parameter task is not null.
      * - The pool have not been cancelled.
      */
-    virtual std::size_t push( ITaskPtr task ) = 0;
+    virtual std::size_t push( Task task ) = 0;
 
     /**
      * @brief Pops one executed/cancelled task from the pool.
@@ -131,7 +113,7 @@ public:
      * @pre
      * - The pool have not been cancelled.
      */
-    virtual std::size_t pop( ITaskPtr& task, bool blocking ) = 0;
+    virtual std::size_t pop( Task& task, bool blocking ) = 0;
 
     /**
      * @brief Cancel the pool functionality indefinitely releasing any thread.
@@ -175,13 +157,13 @@ public:
     template< typename Derived >
     std::size_t pop( std::shared_ptr< Derived > &task, bool blocking )
     {
-        ITaskPtr task_tmp;
-        std::size_t ret = pop( task_tmp, blocking );
+        Task task_abstract;
+        std::size_t ret = pop( task_abstract, blocking );
         if ( ret > 0 )
         {
-            assert( task_tmp.get() != nullptr );
-            task = std::dynamic_pointer_cast< Derived >( task_tmp );
-            assert( task.get() != nullptr );
+            assert( task_abstract.get( ) != nullptr );
+            task = std::dynamic_pointer_cast< Derived >( task_abstract );
+            assert( task.get( ) == task_abstract.get( ) );
         }
 
         return ret;

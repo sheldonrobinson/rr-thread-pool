@@ -28,6 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "MessageQueue.h"
+#include "Mutex.h"
+#include "Thread.h"
+#include "Trace.h"
 
 #include <deque>
 #include <string>
@@ -37,48 +40,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 
-#include <ThreadPosix.h>
-
 // ------------------------------------------------------------------------....
 
 namespace
 {
 
-class TestQueueThread
-    : public ThreadPosix::IRunner
+class TestQueueTask
+    : public ITask
 {
 
     int m_id;
 
-    MutexPosix& m_mutex;
-    MessageQueue< std::string >& m_in_queue;
-    MessageQueue< std::string >& m_out_queue;
-
-    std::unique_ptr< ThreadPosix > m_thread;
+    MessageQueueT< std::string >& m_in_queue;
+    MessageQueueT< std::string >& m_out_queue;
 
 public:
 
-    TestQueueThread( int id,
-                     MutexPosix& mutex,
-                     MessageQueue< std::string >& in_queue,
-                     MessageQueue< std::string >& out_queue )
+    TestQueueTask( int id,
+                   MessageQueueT< std::string >& in_queue,
+                   MessageQueueT< std::string >& out_queue )
         :
           m_id( id ),
-          m_mutex( mutex ),
           m_in_queue( in_queue ),
           m_out_queue( out_queue )
-    {
-        m_thread.reset( new ThreadPosix( *this ) );
-    }
-
-    virtual ~TestQueueThread( )
     { }
 
-    virtual void
-    run( ThreadPosix& thread )
-    {
-        (void) thread;
+    virtual ~TestQueueTask( )
+    { }
 
+    void
+    execute( )
+    {
         trace( "Running" );
 
         std::string message;
@@ -99,13 +91,6 @@ public:
         trace( "Done." );
     }
 
-    void
-    trace( std::string message )
-    {
-        Locker< MutexPosix > locker( m_mutex );
-        std::cerr << m_id << ": " << message << std::endl;
-    }
-
 };
 
 } // anonymous namespace
@@ -115,20 +100,25 @@ public:
 void
 test_MessageQueue( )
 {
-    const int NUM_THREADS = 10;
-    const int NUM_MESSAGES = 1000;
+    const int NUM_THREADS = 100;
+    const int NUM_MESSAGES = 100000;
     const int QUEUE_CAPACITY = 100;
 
-    MutexPosix mutex;
-    MessageQueue< std::string > queue_in( QUEUE_CAPACITY );
-    MessageQueue< std::string > queue_out( QUEUE_CAPACITY );
+    MessageQueueT< std::string > queue_in( QUEUE_CAPACITY );
+    MessageQueueT< std::string > queue_out( QUEUE_CAPACITY );
 
     {
-        std::vector< std::shared_ptr< TestQueueThread > > threads;
+        std::vector< Thread > threads;
+
         threads.reserve( NUM_THREADS );
         for( int i = 0; i < NUM_THREADS; ++i )
         {
-            threads.push_back( std::make_shared< TestQueueThread >( i + 1, mutex, queue_in, queue_out ) );
+            Task worker( new TestQueueTask( i + 1,
+                                            queue_in,
+                                            queue_out ) );
+
+            Thread new_thread( IThread::create( worker ) );
+            threads.push_back( new_thread );
         }
 
         int num_messages_in = NUM_MESSAGES;
@@ -164,10 +154,11 @@ test_MessageQueue( )
                 std::size_t num = queue_out.pop( message, num_messages_in > 0 );
                 if( num > 0 )
                 {
-                    Locker< MutexPosix > locker( mutex );
-                    std::cerr << 0 << ": " << message
-                              << " #" << queue_in.size( )
-                              << ":" << queue_out.size( ) << std::endl;
+                    std::stringstream str;
+                    str << 0 << ": " << message
+                        << " #" << queue_in.size( )
+                        << ":" << queue_out.size( ) << std::endl;
+                    trace( str.str( ) );
                     --num_messages_out;
                 }
                 else
@@ -178,6 +169,12 @@ test_MessageQueue( )
         }
 
         queue_in.cancel( );
+
+        for( auto& thread: threads )
+        {
+            thread->join( );
+            thread.reset( );
+        }
     }
 }
 
