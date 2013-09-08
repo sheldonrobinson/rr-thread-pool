@@ -18,6 +18,8 @@ TEMPLATE = app
 
 HEADERS += \
     Cond.h \
+    Documentation.h \
+    Locker.h \
     Message.h \
     MessageQueue.h \
     Mutex.h \

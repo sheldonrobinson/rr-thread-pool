@@ -1,4 +1,4 @@
-/**
+/*
 Copyright (c) 2013, Riccardo Ressi
 All rights reserved.
 
@@ -38,16 +38,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ------------------------------------------------------------------------
 
 class IThread;
+
+/**
+ * @brief Shared pointer for abstract interface @ref IThread.
+ *
+ * @see @ref RAII "Resource Acquisition Is Initialization"
+ *
+ * @ingroup threading-base raii
+ */
 typedef std::shared_ptr< IThread > Thread;
 
 /**
- * @brief A class to create and control threads.
+ * @brief The class thread represents a single thread of execution.
  *
- * The class is defined as a pure abstract class with a factory method
- * (see @ref ICond::create) to build platform-specific implementations
- * of the queue while maintaining a platform-agnostic interface.
+ * Threads allow multiple pieces of code to run asynchronously and
+ * simultaneously.
  *
- * The class is 100% thread safe.
+ * @code
+   class MyTask:
+        public ITask
+   {
+       void execute( ) { ... }
+   }
+
+   int main( )
+   {
+       Task task = std::make_shared< MyTask >( );
+       Thread my_thread = IThread::create( task );
+       ...
+       my_thread->join( );
+   }
+   @endcode
+ *
+ * @ingroup threading-base
  */
 class IThread
 {
@@ -55,8 +78,15 @@ class IThread
 public:
 
     /**
-     * @brief Factory method to create a thread implemented for the
-     * current platform.
+     * @brief Creates one new thread to execute one single task.
+     *
+     * @param task Shared pinter to a @ref ITask to be executed by the thread.
+     * The created thread also takes ownrership of the task during its
+     * execution.
+     *
+     * @return A shared pointer to an object to check and control the created
+     * thread. The chreated thread is also taking ownership to the returned
+     * object.
      */
     static Thread create( Task task );
 
@@ -66,10 +96,13 @@ public:
     static Thread self( );
 
    /**
-     * @brief Destructor.
+     * @brief Joins and destroyes the object.
      *
-     * @warning If the thread is still running waits for its termination (see
-     * method @ref join).
+     * Before destroying the object calls the method @ref join to ensure the
+     * hanlded thread is terminated.
+     *
+     * @pre
+     * -# The object cannot be destroyed by its own thread.
      */
     virtual ~IThread( )
     { }
@@ -80,25 +113,24 @@ public:
     virtual bool is_running( ) const = 0;
 
     /**
-     * @brief Cancel and wait for thread termination.
+     * @brief Cancels and waits for thread termination.
      *
-     * @warning This method blocks the caller thread until the thread controlled
-     * by the current object is not finished, be sure that this is going to
-     * happen to avoid deadlocks.
+     * @pre
+     * -# This method cannot be from the whole thread.
      */
     virtual void join( ) = 0;
 
     /**
-     * @brief Passes the execution of the caller thread to another thread.
+     * @brief if supported by the platform implementation, passes the execution
+     * of the thread to another thread.
      *
-     * @note This method is affecting the caller thread instead of the thread
-     * controlled by the object. Have not been declared static in order to
-     * use the same platform implementation of the current instance.
+     * @pre
+     * -# This method can be called only from the whole thread.
      */
     virtual void yield( ) const = 0;
 
     /**
-     * @brief Returns the platform specific handle.
+     * @brief Returns the platform dependent handle assiciated to this object.
      */
     virtual void* handle( ) = 0;
 

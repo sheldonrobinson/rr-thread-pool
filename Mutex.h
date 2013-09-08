@@ -1,4 +1,4 @@
-/**
+/*
 Copyright (c) 2013, Riccardo Ressi
 All rights reserved.
 
@@ -27,6 +27,8 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "Locker.h"
+
 #include <assert.h>
 #include <memory>
 
@@ -36,13 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ------------------------------------------------------------------------
 
 /**
- * @brief A classical mutex meant to protect critical sections.
+ * @brief The mutex class is a synchronization primitive that can be used to
+ * protect shared data from being simultaneously accessed by multiple threads.
  *
- * The class is defined as a pure abstract class with a factory method
- * (see @ref IMutex::create) to build platform-specific implementations
- * of the queue while maintaining a platform-agnostic interface.
- *
- * The class is 100% thread safe.
+ * @ingroup threading-base
  */
 class IMutex
 {
@@ -50,8 +49,11 @@ class IMutex
 public:
 
     /**
-     * @brief Factory method to create a mutex implemented for the current
-     * platform.
+     * @brief Creates one new mutex.
+     *
+     * A mutual exclusion object (mutex) is an object that can be owned by one
+     * single thread at the same time. Threads can use mutexes to performs
+     * operation on block of shared variables atomically.
      */
     static IMutex* create( );
 
@@ -63,6 +65,9 @@ public:
 
     /**
      * @brief Locks the mutex.
+     *
+     * The calling thread try to get the exclusive ownership over the mutex or
+     * wait until it manage to
      */
     virtual void lock( ) = 0;
 
@@ -72,7 +77,7 @@ public:
     virtual void unlock( ) = 0;
 
     /**
-     * @brief Return the platform dependent handle of the mutex.
+     * @brief Returns the platform dependent handle assiciated to this object.
      */
     virtual void* handle( ) = 0;
 
@@ -82,6 +87,21 @@ public:
 
 /**
  * @brief Convenient adapter for class @ref IMutex.
+ *
+ * @see @ref RAII "Resource Acquisition Is Initialization"
+ *
+ * @code
+   Mutex my_mutex;
+   ...
+   // Exception safe critical section:
+   {
+        Mutex::Locker( my_mutex );
+        ...
+   }
+   ...
+   @endcode
+ *
+ * @ingroup threading-base raii
  */
 class Mutex
 {
@@ -89,19 +109,33 @@ class Mutex
 public:
 
     /**
-     * @brief Constructor.
+     * @brief Convenient typedef for a @ref Locker that locks a @ref Mutex.
      *
-     * If no abstract interface is passed it creates a default instance of it
-     * by using the method @ref IMutex::create.
+     * @ingroup threading-base raii
      */
-    Mutex( IMutex* imutex = nullptr )
+    typedef Locker< Mutex > Locker;
+
+    /**
+     * @brief Default constructor.
+     *
+     * Builds a mutex calling the method @ref IMutex::create() and hosting the
+     * returned abstract interface.
+     */
+    Mutex( )
+        : m_mutex( IMutex::create( ) )
+    { }
+
+    /**
+     * @brief Creates a mutex adapter from out of an abstract interface.
+     *
+     * @param imutex Object implementing the abstract interface @ref IMutex.
+     *
+     * @pre
+     * -# Parameter @a imutex is not null.
+     */
+    Mutex( IMutex* imutex )
         : m_mutex( imutex )
     {
-        if ( m_mutex.get() == nullptr )
-        {
-            m_mutex.reset( IMutex::create( ) );
-        }
-
         assert( nullptr != m_mutex.get( ) );
     }
 
@@ -138,31 +172,6 @@ private:
 
     friend class CondPosix;
     friend class Cond;
-
-};
-
-// -----------------------------------------------------------------------------
-
-template< typename Lockable = Mutex >
-class Locker
-{
-
-public:
-
-    Locker( Lockable& target )
-        : m_target( target )
-    {
-        m_target.lock( );
-    }
-
-    ~Locker( )
-    {
-        m_target.unlock( );
-    }
-
-private:
-
-    Lockable& m_target;
 
 };
 

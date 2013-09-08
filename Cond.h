@@ -1,4 +1,4 @@
-/**
+/*
 Copyright (c) 2013, Riccardo Ressi
 All rights reserved.
 
@@ -35,16 +35,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef COND_H
 #define COND_H
 
+// Opaque interfaces:
+class IMutex;
+
+// Opaque classes:
+class Mutex;
+
 // ------------------------------------------------------------------------
 
 /**
- * @brief A classical condition variable meant to signal events.
+ * @brief A condition variable to allow sincronization between threads.
  *
- * The class is defined as a pure abstract class with a factory method
- * (see @ref ICond::create) to build platform-specific implementations
- * of the queue while maintaining a platform-agnostic interface.
+ * Condition variables are synchronization primitives to allow threads to
+ * wait until a particular condition occurs.
  *
- * The class is 100% thread safe.
+ * @ingroup threading-base
  */
 class ICond
 {
@@ -52,8 +57,7 @@ class ICond
 public:
 
     /**
-     * @brief Factory method to create a condition variable implemented for the
-     * current platform.
+     * @brief Creates one new condition variable.
      */
     static ICond* create( );
 
@@ -64,33 +68,42 @@ public:
     { }
 
     /**
-     * @brief Wait for signals.
+     * @brief The calling thread will wait until the contition variable is
+     * signaled by another thread.
      *
      * This method atomically performs this steps:
-     * - unlock the mutex.
-     * - wait for a signal (see methods @ref signal and @ref broadcast).
-     * - lock the mutex.
+     * - unlocks the passed mutex.
+     * - wait for a signal from another thread (see methods @ref signal and @ref
+     *   broadcast).
+     * - locks again the mutex.
      *
      * @param mutex The mutex to be unlocked/locked.
      *
-     * @warning This method blocks the current thread until a second thread
-     * sends a signal, be sure that this second thread is going to do it soon
-     * or later to avoid deadlocks.
+     * @pre
+     * -# The passed mutex is currently locked by the calling thread.
+     *
+     * @post
+     * -# The passed mutex is locked back by the calling thread.
      */
     virtual void wait( IMutex* mutex ) = 0;
 
     /**
-     * @brief Resumes one single thread that is waiting for the condition.
+     * @brief Resumes at least one single thread that is waiting for the
+     * condition.
+     *
+     * Calling the method without no threads waiting for signals have no effect.
      */
     virtual void signal( ) = 0;
 
     /**
      * @brief Resumes all threads that are waiting for the condition.
+     *
+     * Calling the method without no threads waiting for signals have no effect.
      */
     virtual void broadcast( ) = 0;
 
     /**
-     * @brief Return the platform dependent handle of the condition variable.
+     * @brief Returns the platform dependent handle assiciated to this object.
      */
     virtual void* handle( ) = 0;
 
@@ -100,6 +113,13 @@ public:
 
 /**
  * @brief Convenient adapter for class @ref ICond.
+ *
+ * @note
+ * This class is usefull to write code that follow the design pattern
+ *
+ * @see @ref RAII "Resource Acquisition Is Initialization"
+ *
+ * @ingroup threading-base raii
  */
 class Cond
 {
@@ -107,20 +127,28 @@ class Cond
 public:
 
     /**
-     * @brief Constructor.
+     * @brief Default constructor.
      *
-     * If no abstract interface is passed it creates a default instance of it
-     * by using the method @ref ICond::create.
+     * Builds a condition variable by calling the method @ref ICond::create()
+     * and then hosts the returned abstract interface to destroy it during the
+     * object destruction.
      */
-    Cond( ICond* icond = nullptr )
+    Cond( )
+        : m_cond( ICond::create( ) )
+    { }
+
+    /**
+     * @brief Creates a cond adapter from out of an abstract interface.
+     *
+     * @param icond Object implementing the abstract interface @ref ICond.
+     *
+     * @pre
+     * -# Parameter @a icond is not null.
+     */
+    Cond( ICond* icond )
         : m_cond( icond )
     {
-        if ( m_cond.get() == nullptr )
-        {
-            m_cond.reset( ICond::create( ) );
-        }
-
-        assert( nullptr != m_cond.get( ) );
+       assert( nullptr != m_cond.get( ) );
     }
 
     /**

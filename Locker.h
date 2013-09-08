@@ -30,66 +30,68 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assert.h>
 #include <memory>
 
-#include "Message.h"
+#ifndef LOCKER_H
+#define LOCKER_H
 
-#ifndef TASK_H
-#define TASK_H
-
-// ------------------------------------------------------------------------
-
-class ITask;
-typedef std::shared_ptr< ITask > Task;
+// -----------------------------------------------------------------------------
 
 /**
- * @brief Abstract class to be implemented to describe a task that need to be
- * executed.
+ * @brief Convenient template class adapter to safely acquire and relase
+ * lockable objects.
+ *
+ * @param Lockable A class that implements methods @a lock and @a unlock.
+ *
+ * @see
+ * - @ref Mutex::Lockable, template specialization for @ref Mutex.
+ * - @ref RAII "Resource Acquisition Is Initialization"
+ *
+ * @ingroup raii
  */
-class ITask
-    : public IMessage
+template< typename Lockable >
+class Locker
 {
 
 public:
+
+    /**
+     * @brief Creates a locker and acquires the passed target.
+     *
+     * @param target Call the method @a lock on the passed target.
+     */
+    Locker( Lockable& target )
+        : m_target( target )
+    {
+        m_target.lock( );
+    }
+
+    /**
+     * @brief Creates a locker and acquires the passed target.
+     *
+     * @param target Call the method @a lock on the passed target.
+     */
+    Locker( Lockable* target )
+        : m_target( *target )
+    {
+        m_target.lock( );
+    }
 
     /**
      * @brief Destructor.
+     *
+     * Also calls the method @a unlock on the target previously passed to the
+     * costructor.
      */
-    virtual ~ITask( )
-    { }
-
-    /**
-     * @brief Executes the task.
-     */
-    virtual void execute( ) = 0;
-
-    /**
-     * @brief Cancels the task.
-     */
-    virtual void cancel( )
-    { }
-
-};
-
-// -----------------------------------------------------------------------------
-
-template< typename Predicate >
-class TaskFunc
-    : public ITask
-{
-    Predicate& m_predicate;
-
-public:
-
-    TaskFunc( Predicate& predicate )
-        : m_predicate( predicate )
-    { }
-
-    virtual void execute( )
+    ~Locker( )
     {
-        m_predicate( );
+        m_target.unlock( );
     }
 
+private:
+
+    Lockable& m_target;
+
 };
 
 // -----------------------------------------------------------------------------
 
-#endif // THREAD_H
+#endif // LOCKER_H

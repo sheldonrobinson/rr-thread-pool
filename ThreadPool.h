@@ -1,4 +1,4 @@
-/**
+/*
 Copyright (c) 2013, Riccardo Ressi
 All rights reserved.
 
