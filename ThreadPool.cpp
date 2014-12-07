@@ -39,37 +39,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
 
 class ThreadPoolWorker
-    :
-    public ITask
+        :
+                public ITask
 {
 
-    IMessageQueue& m_input_queue;
-    IMessageQueue& m_output_queue;
+    IMessageQueue &m_input_queue;
+    IMessageQueue &m_output_queue;
 
 public:
 
-    ThreadPoolWorker( IMessageQueue& input_queue,
-                      IMessageQueue& output_queue )
-        : m_input_queue( input_queue ),
-          m_output_queue( output_queue )
-    { }
+    ThreadPoolWorker(IMessageQueue &input_queue,
+                     IMessageQueue &output_queue)
+            : m_input_queue(input_queue),
+              m_output_queue(output_queue)
+    {
+    }
 
     virtual
-    ~ThreadPoolWorker( )
-    { }
+    ~ThreadPoolWorker()
+    {
+    }
 
     virtual void
-    execute( )
+    execute()
     {
         // For each fetched message:
         Task task;
-        while( m_input_queue.pop( task, true ) )
+        while (m_input_queue.pop(task, true))
         {
-            task->execute( );
-            m_output_queue.push( task );
+            task->execute();
+            m_output_queue.push(task);
         }
 
-        assert( m_input_queue.is_cancelled( ) );
+        assert(m_input_queue.is_cancelled());
     }
 
 };
@@ -77,35 +79,35 @@ public:
 // -----------------------------------------------------------------------------
 
 class ThreadPoolPosix
-    :
-    public IThreadPool
-{    
+        :
+                public IThreadPool
+{
 
-    std::vector< Thread > m_threads;
-    std::unique_ptr< IMessageQueue > m_input_queue;
-    std::unique_ptr< IMessageQueue > m_output_queue;
+    std::vector<Thread> m_threads;
+    std::unique_ptr<IMessageQueue> m_input_queue;
+    std::unique_ptr<IMessageQueue> m_output_queue;
     volatile bool m_cancelled;
 
 public:
 
-    ThreadPoolPosix( std::size_t num_threads,
-                     std::size_t task_capacity )
-        :
-        m_cancelled( false )
+    ThreadPoolPosix(std::size_t num_threads,
+                    std::size_t task_capacity)
+            :
+            m_cancelled(false)
     {
         // Creates the message queues (in/out) for the tasks:
-        m_input_queue.reset( IMessageQueue::create( task_capacity ) );
-        m_output_queue.reset( IMessageQueue::create( ) );
+        m_input_queue.reset(IMessageQueue::create(task_capacity));
+        m_output_queue.reset(IMessageQueue::create());
 
         // Creates the threads:
-        m_threads.reserve( num_threads );
-        for( std::size_t i = 0; i < num_threads; ++i )
+        m_threads.reserve(num_threads);
+        for (std::size_t i = 0; i < num_threads; ++i)
         {
-            Task worker( new ThreadPoolWorker( *m_input_queue,
-                                               *m_output_queue ) );
+            Task worker(new ThreadPoolWorker(*m_input_queue,
+                                             *m_output_queue));
 
-            Thread thread_worker( IThread::create( worker ) );
-            m_threads.push_back( thread_worker );
+            Thread thread_worker(IThread::create(worker));
+            m_threads.push_back(thread_worker);
         }
     }
 
@@ -116,50 +118,50 @@ public:
     }
 
     virtual std::size_t
-    push( Task task )
+    push(Task task)
     {
         // Precondition verification:
-        assert( nullptr != task.get( ) );
-        assert( !m_cancelled );
+        assert(nullptr != task.get());
+        assert(!m_cancelled);
 
         // Tries to push the task in the form of message to the input queue:
-        return m_input_queue->push( task );
+        return m_input_queue->push(task);
     }
 
     virtual std::size_t
-    pop( Task& task, bool blocking )
+    pop(Task &task, bool blocking)
     {
         // Precondition verification:
-        assert( !m_cancelled );
+        assert(!m_cancelled);
 
         // Fetches the next executed task in the form of message:
-        return m_output_queue->pop( task, blocking );
+        return m_output_queue->pop(task, blocking);
     }
 
     virtual void
-    cancel( )
+    cancel()
     {
-        m_input_queue->cancel( );
+        m_input_queue->cancel();
         m_cancelled = true;
     }
 
     virtual void
-    join( )
+    join()
     {
         // Cancel the input queue in order to terminate all workers:
-        cancel( );
+        cancel();
 
         // Joins all workers threads:
-        for( auto& thread: m_threads )
+        for (auto &thread: m_threads)
         {
-            thread->join( );
+            thread->join();
         }
 
         // Transfers all pending tasks from the input queue to the output one:
         Task task;
-        while( m_input_queue->pop( task, false ) > 0 )
+        while (m_input_queue->pop(task, false) > 0)
         {
-            m_output_queue->push( task );
+            m_output_queue->push(task);
         }
     }
 
@@ -167,11 +169,11 @@ public:
 
 // -----------------------------------------------------------------------------
 
-IThreadPool*
-IThreadPool::create( std::size_t num_threads,
-                     std::size_t task_capacity )
+IThreadPool *
+IThreadPool::create(std::size_t num_threads,
+                    std::size_t task_capacity)
 {
-    return new ThreadPoolPosix( num_threads, task_capacity );
+    return new ThreadPoolPosix(num_threads, task_capacity);
 }
 
 // -----------------------------------------------------------------------------

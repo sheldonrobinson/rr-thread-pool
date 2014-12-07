@@ -36,7 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ------------------------------------------------------------------------
 
 class IMessage;
-typedef std::shared_ptr< IMessage > Message;
+
+typedef std::shared_ptr<IMessage> Message;
 
 /**
  * @brief Abstract class to be implemented to describe a Message that need to be
@@ -50,8 +51,9 @@ public:
     /**
      * @brief Destructor.
      */
-    virtual ~IMessage( )
-    { }
+    virtual ~IMessage()
+    {
+    }
 
 };
 

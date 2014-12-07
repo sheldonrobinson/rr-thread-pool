@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @ingroup raii
  */
-template< typename Lockable >
+template<typename Lockable>
 class Locker
 {
 
@@ -58,10 +58,10 @@ public:
      *
      * @param target Call the method @a lock on the passed target.
      */
-    Locker( Lockable& target )
-        : m_target( target )
+    Locker(Lockable &target)
+            : m_target(target)
     {
-        m_target.lock( );
+        m_target.lock();
     }
 
     /**
@@ -69,10 +69,10 @@ public:
      *
      * @param target Call the method @a lock on the passed target.
      */
-    Locker( Lockable* target )
-        : m_target( *target )
+    Locker(Lockable *target)
+            : m_target(*target)
     {
-        m_target.lock( );
+        m_target.lock();
     }
 
     /**
@@ -81,14 +81,14 @@ public:
      * Also calls the method @a unlock on the target previously passed to the
      * constructor.
      */
-    ~Locker( )
+    ~Locker()
     {
-        m_target.unlock( );
+        m_target.unlock();
     }
 
 private:
 
-    Lockable& m_target;
+    Lockable &m_target;
 
 };
 

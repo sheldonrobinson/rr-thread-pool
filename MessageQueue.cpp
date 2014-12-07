@@ -44,7 +44,7 @@ class MessageQueueImpl: public IMessageQueue
 
     mutable Mutex m_mutex;
     mutable Cond m_cond;
-    std::deque< Message >  m_queue;
+    std::deque<Message> m_queue;
 
 public:
 
@@ -52,38 +52,40 @@ public:
             :
             m_max_capacity(max_capacity),
             m_cancelled(false)
-    { }
+    {
+    }
 
     // -------------------------------------------------------------------------
 
     virtual
-    ~MessageQueueImpl( )
-    { }
+    ~MessageQueueImpl()
+    {
+    }
 
     // -------------------------------------------------------------------------
 
     virtual std::size_t
-    pop( Message& message, bool blocking )
+    pop(Message &message, bool blocking)
     {
         std::size_t ret = 0;
 
         // Blocking implementation:
-        if ( blocking )
+        if (blocking)
         {
-            Locker locker( m_mutex );
+            Locker locker(m_mutex);
 
-            while ( !m_cancelled ) // <- while needed because of spurious wake-ups.
+            while (!m_cancelled) // <- while needed because of spurious wake-ups.
             {
-                ret = m_queue.size( );
-                if ( ret > 0 )
+                ret = m_queue.size();
+                if (ret > 0)
                 {
-                    message = m_queue.front( );
-                    m_queue.pop_front( );
+                    message = m_queue.front();
+                    m_queue.pop_front();
                     break;
                 }
 
-                m_cond.wait( m_mutex ); // Performs unlock-wait-lock op.
-                if ( m_cancelled )
+                m_cond.wait(m_mutex); // Performs unlock-wait-lock op.
+                if (m_cancelled)
                 {
                     break;
                 }
@@ -91,13 +93,13 @@ public:
         }
         else
         {
-            Locker locker( m_mutex );
+            Locker locker(m_mutex);
 
-            ret = m_queue.size( );
-            if ( ret > 0 )
+            ret = m_queue.size();
+            if (ret > 0)
             {
-                message = m_queue.front( );
-                m_queue.pop_front( );
+                message = m_queue.front();
+                m_queue.pop_front();
             }
         }
 
@@ -107,20 +109,20 @@ public:
     // -------------------------------------------------------------------------
 
     virtual std::size_t
-    push( Message message )
+    push(Message message)
     {
         std::size_t ret = 0;
-        Locker locker( m_mutex );
+        Locker locker(m_mutex);
 
-        ret = m_queue.size( );
-        if ( ret < m_max_capacity )
+        ret = m_queue.size();
+        if (ret < m_max_capacity)
         {
-            m_queue.push_back( message );
+            m_queue.push_back(message);
 
             ret++;
-            if ( ret == 1 )
+            if (ret == 1)
             {
-                m_cond.signal( );
+                m_cond.signal();
             }
         }
         else
@@ -134,17 +136,17 @@ public:
     // -------------------------------------------------------------------------
 
     virtual void
-    cancel( )
+    cancel()
     {
-        Locker locker( m_mutex );
+        Locker locker(m_mutex);
         m_cancelled = true;
-        m_cond.broadcast( );
+        m_cond.broadcast();
     }
 
     // -------------------------------------------------------------------------
 
     virtual bool
-    is_cancelled( ) const
+    is_cancelled() const
     {
         return m_cancelled;
     }
@@ -153,20 +155,20 @@ public:
 
     virtual
     std::size_t
-    size( ) const
+    size() const
     {
-        Locker locker( m_mutex );
-        return m_queue.size( );
+        Locker locker(m_mutex);
+        return m_queue.size();
     }
 
 };
 
 // -----------------------------------------------------------------------------
 
-IMessageQueue*
-IMessageQueue::create( std::size_t max_capacity )
+IMessageQueue *
+IMessageQueue::create(std::size_t max_capacity)
 {
-    return new MessageQueueImpl( max_capacity );
+    return new MessageQueueImpl(max_capacity);
 }
 
 // -----------------------------------------------------------------------------

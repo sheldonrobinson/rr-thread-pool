@@ -39,43 +39,45 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
 
 class ThreadPosix;
-typedef std::shared_ptr< ThreadPosix > ThreadPosixPtr;
+
+typedef std::shared_ptr<ThreadPosix> ThreadPosixPtr;
 
 struct ThreadInfo
 {
-    ThreadInfo( Thread thread )
-        : m_thread( thread )
-    { }
+    ThreadInfo(Thread thread)
+            : m_thread(thread)
+    {
+    }
 
     Thread m_thread;
 };
 
 class ThreadRegister
 {
-     pthread_key_t m_key;
+    pthread_key_t m_key;
 
 public:
 
-     ThreadRegister( )
-     {
-         ::pthread_key_create( &m_key, destroy_object );
-     }
+    ThreadRegister()
+    {
+        ::pthread_key_create(&m_key, destroy_object);
+    }
 
-     ~ThreadRegister( )
-     {
-         ::pthread_key_delete( m_key );
-     }
+    ~ThreadRegister()
+    {
+        ::pthread_key_delete(m_key);
+    }
 
-     void register_object( Thread thread );
+    void register_object(Thread thread);
 
-     Thread current( );
+    Thread current();
 
-     static void destroy_object( void *opaque )
-     {
-         ThreadInfo* info = reinterpret_cast< ThreadInfo* >( opaque );
-         assert( info != nullptr );
-         delete info;
-     }
+    static void destroy_object(void *opaque)
+    {
+        ThreadInfo *info = reinterpret_cast< ThreadInfo * >( opaque );
+        assert(info != nullptr);
+        delete info;
+    }
 
 };
 
@@ -84,7 +86,7 @@ static ThreadRegister thread_register;
 // -----------------------------------------------------------------------------
 
 class ThreadPosix
-    : public IThread
+        : public IThread
 {
     friend class ThreadRegister;
 
@@ -92,16 +94,17 @@ class ThreadPosix
     {
         Thread m_self;
         Task m_task;
-        volatile bool& m_running;
+        volatile bool &m_running;
 
         Cond m_cond;
         Mutex m_mutex;
 
-        InitData( Thread self, Task task, volatile bool& running )
-            : m_self( self ),
-              m_task( task ),
-              m_running( running )
-        { }
+        InitData(Thread self, Task task, volatile bool &running)
+                : m_self(self),
+                  m_task(task),
+                  m_running(running)
+        {
+        }
 
     };
 
@@ -110,98 +113,98 @@ class ThreadPosix
 
 public:
 
-    ThreadPosix( bool fetch_self )
-        : m_running( false )
+    ThreadPosix(bool fetch_self)
+            : m_running(false)
     {
-        if ( fetch_self )
+        if (fetch_self)
         {
-            m_thread = ::pthread_self( );
+            m_thread = ::pthread_self();
             m_running = true;
         }
     }
 
     void
-    init( ThreadPosixPtr& self, Task task )
+    init(ThreadPosixPtr &self, Task task)
     {
-        assert( self.get() == this );
+        assert(self.get() == this);
 
         pthread_attr_t attr;
-        ::pthread_attr_init( &attr );
-        ::pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
+        ::pthread_attr_init(&attr);
+        ::pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
         {
-            InitData init_data( self, task, m_running );
-            Locker< Mutex > lock( init_data.m_mutex );
+            InitData init_data(self, task, m_running);
+            Locker<Mutex> lock(init_data.m_mutex);
 
-            ::pthread_create( &m_thread, &attr, run_thread, &init_data );
+            ::pthread_create(&m_thread, &attr, run_thread, &init_data);
 
-            init_data.m_cond.wait( init_data.m_mutex );
+            init_data.m_cond.wait(init_data.m_mutex);
         }
 
-        ::pthread_attr_destroy( &attr );
+        ::pthread_attr_destroy(&attr);
     }
 
     virtual
-    ~ThreadPosix( )
+    ~ThreadPosix()
     {
-        if( m_thread != ::pthread_self( ) )
+        if (m_thread != ::pthread_self())
         {
-            join( );
+            join();
         }
     }
 
     virtual bool
-    is_running( ) const
+    is_running() const
     {
         return m_running;
     }
 
     virtual void
-    join( )
+    join()
     {
-        assert( m_thread != ::pthread_self( ) );
-        ::pthread_join( m_thread, nullptr );
+        assert(m_thread != ::pthread_self());
+        ::pthread_join(m_thread, nullptr);
     }
 
-    virtual void yield( ) const
+    virtual void yield() const
     {
-        assert( m_thread == ::pthread_self( ) );
-        ::sched_yield( );
+        assert(m_thread == ::pthread_self());
+        ::sched_yield();
     }
 
-    virtual void*
-    handle( )
+    virtual void *
+    handle()
     {
         return reinterpret_cast< void *>( m_thread );
     }
 
 private:
 
-    static void*
-    run_thread( void* par )
+    static void *
+    run_thread(void *par)
     {
         {
             Thread self;
             Task task;
-            volatile bool* running_flag = 0;
+            volatile bool *running_flag = 0;
 
             {
                 // This is needed to keep the thread and task objects alive during
                 // the entire execution:
-                InitData& init_data = *( reinterpret_cast< InitData* >( par ) );
-                Locker< Mutex > locker( init_data.m_mutex );
+                InitData &init_data = *(reinterpret_cast< InitData * >( par ));
+                Locker<Mutex> locker(init_data.m_mutex);
                 self = init_data.m_self;
                 task = init_data.m_task;
-                running_flag = &( init_data.m_running );
-                ( *running_flag ) = true;
+                running_flag = &(init_data.m_running);
+                (*running_flag) = true;
 
-                thread_register.register_object( self );
-                init_data.m_cond.signal( );
+                thread_register.register_object(self);
+                init_data.m_cond.signal();
             }
 
-            task->execute( );
+            task->execute();
 
-            ( *running_flag ) = false;
+            (*running_flag) = false;
         }
 
         // trace( "Done!" );
@@ -215,12 +218,12 @@ private:
 // -----------------------------------------------------------------------------
 
 Thread
-IThread::create( Task task )
+IThread::create(Task task)
 {
-    ThreadPosixPtr new_thread( std::make_shared< ThreadPosix >( false ) );
-    assert( new_thread.get( ) != nullptr );
+    ThreadPosixPtr new_thread(std::make_shared<ThreadPosix>(false));
+    assert(new_thread.get() != nullptr);
 
-    new_thread->init( new_thread, task );
+    new_thread->init(new_thread, task);
 
     return new_thread;
 }
@@ -228,35 +231,35 @@ IThread::create( Task task )
 // -----------------------------------------------------------------------------
 
 Thread
-IThread::self( )
+IThread::self()
 {
-    return thread_register.current( );
+    return thread_register.current();
 }
 
 // -----------------------------------------------------------------------------
 
 void
-ThreadRegister::register_object( Thread thread )
+ThreadRegister::register_object(Thread thread)
 {
-    ::pthread_setspecific( m_key, new ThreadInfo( thread ) );
+    ::pthread_setspecific(m_key, new ThreadInfo(thread));
 }
 
 // -----------------------------------------------------------------------------
 
 Thread
-ThreadRegister::current( )
+ThreadRegister::current()
 {
-    void* opaque = pthread_getspecific( m_key );
-    if ( opaque != nullptr )
+    void *opaque = pthread_getspecific(m_key);
+    if (opaque != nullptr)
     {
-        ThreadInfo* info = reinterpret_cast< ThreadInfo* >( opaque );
-        assert( info != nullptr );
+        ThreadInfo *info = reinterpret_cast< ThreadInfo * >( opaque );
+        assert(info != nullptr);
         return info->m_thread;
     }
 
-    Thread thread( new ThreadPosix( true ) );
-    ::pthread_setspecific( m_key, new ThreadInfo( thread ) );
-    assert( pthread_getspecific( m_key ) != nullptr );
+    Thread thread(new ThreadPosix(true));
+    ::pthread_setspecific(m_key, new ThreadInfo(thread));
+    assert(pthread_getspecific(m_key) != nullptr);
 
     return thread;
 }

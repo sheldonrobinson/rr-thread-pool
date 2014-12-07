@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ------------------------------------------------------------------------
 
 class ITask;
-typedef std::shared_ptr< ITask > Task;
+typedef std::shared_ptr<ITask> Task;
 
 /**
  * @brief Abstract class to be implemented to describe a task that need to be
@@ -51,41 +51,44 @@ class ITask
 public:
 
     /**
-     * @brief Destructor.
-     */
-    virtual ~ITask( )
-    { }
+    * @brief Destructor.
+    */
+    virtual ~ITask()
+    {
+    }
 
     /**
-     * @brief Executes the task.
-     */
-    virtual void execute( ) = 0;
+    * @brief Executes the task.
+    */
+    virtual void execute() = 0;
 
     /**
-     * @brief Cancels the task.
-     */
-    virtual void cancel( )
-    { }
+    * @brief Cancels the task.
+    */
+    virtual void cancel()
+    {
+    }
 
 };
 
 // -----------------------------------------------------------------------------
 
-template< typename Predicate >
+template<typename Function>
 class TaskFunc
-    : public ITask
+        : public ITask
 {
-    Predicate& m_predicate;
+    Function &m_predicate;
 
 public:
 
-    TaskFunc( Predicate& predicate )
-        : m_predicate( predicate )
-    { }
-
-    virtual void execute( )
+    TaskFunc(Function &predicate)
+            : m_predicate(predicate)
     {
-        m_predicate( );
+    }
+
+    virtual void execute()
+    {
+        m_predicate();
     }
 
 };

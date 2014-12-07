@@ -44,7 +44,7 @@ namespace
 // -----------------------------------------------------------------------------
 
 void
-trace_set( bool active )
+trace_set(bool active)
 {
     is_active = active;
 }
@@ -52,11 +52,11 @@ trace_set( bool active )
 // -----------------------------------------------------------------------------
 
 void
-trace( std::string message )
+trace(std::string message)
 {
-    if ( is_active )
+    if (is_active)
     {
-        Locker< Mutex > locker( mutex );
+        Locker<Mutex> locker(mutex);
         std::cerr << message << std::endl;
     }
 }
@@ -64,11 +64,11 @@ trace( std::string message )
 // -----------------------------------------------------------------------------
 
 void
-trace( int id, std::string message )
+trace(int id, std::string message)
 {
-    if ( is_active )
+    if (is_active)
     {
-        Locker< Mutex > locker( mutex );
+        Locker<Mutex> locker(mutex);
         std::cerr << id << ": " << message << std::endl;
     }
 }

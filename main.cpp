@@ -27,18 +27,22 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-void test_Thread( );
-void test_MessageQueue( );
-void test_ThreadPool( );
+#include <Trace.h>
+
+void test_Thread();
+void test_MessageQueue();
+void test_ThreadPool();
 
 int main(int argc, char *argv[])
 {
     (void) argc;
     (void) argv;
 
-    test_Thread( );
-    test_MessageQueue( );
-    test_ThreadPool( );
+    trace_set(true);
+
+    test_Thread();
+    test_MessageQueue();
+    test_ThreadPool();
 
     return 0;
 }

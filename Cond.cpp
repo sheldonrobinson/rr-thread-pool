@@ -34,46 +34,46 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <pthread.h>
 
 class CondPosix
-    : public ICond
+        : public ICond
 {
 
 public:
 
-    CondPosix( )
+    CondPosix()
     {
-        ::pthread_cond_init( &m_cond, nullptr );
+        ::pthread_cond_init(&m_cond, nullptr);
     }
 
-    virtual ~CondPosix( )
+    virtual ~CondPosix()
     {
-        ::pthread_cond_destroy( &m_cond );
+        ::pthread_cond_destroy(&m_cond);
     }
 
     void
-    wait( IMutex* mutex )
+    wait(IMutex *mutex)
     {
-        assert( mutex != nullptr );
+        assert(mutex != nullptr);
 
         pthread_mutex_t *mutex_handle =
-           reinterpret_cast< pthread_mutex_t* >( mutex->handle( ) );
+                reinterpret_cast< pthread_mutex_t * >(mutex->handle());
 
-        ::pthread_cond_wait( &m_cond, mutex_handle );
+        ::pthread_cond_wait(&m_cond, mutex_handle);
     }
 
     void
-    signal( )
+    signal()
     {
-        pthread_cond_signal( &m_cond );
+        pthread_cond_signal(&m_cond);
     }
 
     void
-    broadcast( )
+    broadcast()
     {
-        pthread_cond_broadcast( &m_cond );
+        pthread_cond_broadcast(&m_cond);
     }
 
-    virtual void*
-    handle( )
+    virtual void *
+    handle()
     {
         return &m_cond;
     }
@@ -86,10 +86,10 @@ private:
 
 // -----------------------------------------------------------------------------
 
-ICond*
-ICond::create( )
+ICond *
+ICond::create()
 {
-    return new CondPosix( );
+    return new CondPosix();
 }
 
 // -----------------------------------------------------------------------------

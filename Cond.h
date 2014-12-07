@@ -59,13 +59,14 @@ public:
     /**
      * @brief Creates one new condition variable.
      */
-    static ICond* create();
+    static ICond *create();
 
     /**
      * @brief Destructor.
      */
     virtual ~ICond()
-    { }
+    {
+    }
 
     /**
      * @brief The calling thread will wait until the condition variable is
@@ -85,7 +86,7 @@ public:
      * @post
      * -# The passed mutex is locked back by the calling thread.
      */
-    virtual void wait(IMutex* mutex) = 0;
+    virtual void wait(IMutex *mutex) = 0;
 
     /**
      * @brief Resumes at least one single thread that is waiting for the
@@ -105,7 +106,7 @@ public:
     /**
      * @brief Returns the platform dependent handle associated to this object.
      */
-    virtual void* handle() = 0;
+    virtual void *handle() = 0;
 
 };
 
@@ -134,8 +135,9 @@ public:
      * object destruction.
      */
     Cond()
-        : m_cond(ICond::create())
-    { }
+            : m_cond(ICond::create())
+    {
+    }
 
     /**
      * @brief Creates a cond adapter from out of an abstract interface.
@@ -145,16 +147,16 @@ public:
      * @pre
      * -# Parameter @a icond is not null.
      */
-    Cond(ICond* icond)
-        : m_cond(icond)
+    Cond(ICond *icond)
+            : m_cond(icond)
     {
-       assert(nullptr != m_cond.get());
+        assert(nullptr != m_cond.get());
     }
 
     /**
      * @copydoc ICond::wait
      */
-    void wait(Mutex& mutex)
+    void wait(Mutex &mutex)
     {
         m_cond->wait(mutex.interface());
     }
@@ -178,7 +180,7 @@ public:
     /**
      * @brief Returns the abstract interface used by the adapter.
      */
-    ICond* interface()
+    ICond *interface()
     {
         return m_cond.get();
     }

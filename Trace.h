@@ -34,14 +34,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // -----------------------------------------------------------------------------
 
-void
-trace_set( bool active );
+void trace_set(bool active);
 
-void
-trace( std::string message );
+void trace(std::string message);
 
-void
-trace( int id, std::string message );
+void trace(int id, std::string message);
 
 // -----------------------------------------------------------------------------
 

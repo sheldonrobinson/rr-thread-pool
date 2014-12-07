@@ -51,44 +51,46 @@ class TestQueueTask
 
     int m_id;
 
-    MessageQueueT< std::string >& m_in_queue;
-    MessageQueueT< std::string >& m_out_queue;
+    MessageQueueT<std::string> &m_in_queue;
+    MessageQueueT<std::string> &m_out_queue;
 
 public:
 
-    TestQueueTask( int id,
-                   MessageQueueT< std::string >& in_queue,
-                   MessageQueueT< std::string >& out_queue )
-        :
-          m_id( id ),
-          m_in_queue( in_queue ),
-          m_out_queue( out_queue )
-    { }
+    TestQueueTask(int id,
+                  MessageQueueT<std::string> &in_queue,
+                  MessageQueueT<std::string> &out_queue)
+            :
+            m_id(id),
+            m_in_queue(in_queue),
+            m_out_queue(out_queue)
+    {
+    }
 
-    virtual ~TestQueueTask( )
-    { }
+    virtual ~TestQueueTask()
+    {
+    }
 
     void
-    execute( )
+    execute()
     {
-        trace( "Running" );
+        trace("Running");
 
         std::string message;
-        while( m_in_queue.pop( message, true ) )
+        while (m_in_queue.pop(message, true))
         {
-            trace( message );
+            trace(message);
 
             std::stringstream response;
             response << "Response to '" << message << " from '" << m_id << "'";
 
-            while( 0 == m_out_queue.push( response.str( ) ) )
+            while (0 == m_out_queue.push(response.str()))
             {
-                trace( "Waiting for a free slot into the output queue" );
-                sched_yield( );
+                trace("Waiting for a free slot into the output queue");
+                sched_yield();
             }
         }
 
-        trace( "Done." );
+        trace("Done.");
     }
 
 };
@@ -98,82 +100,82 @@ public:
 // ----------------------------------------------------------------------------
 
 void
-test_MessageQueue( )
+test_MessageQueue()
 {
     const int NUM_THREADS = 100;
     const int NUM_MESSAGES = 100000;
     const int QUEUE_CAPACITY = 100;
 
-    MessageQueueT< std::string > queue_in( QUEUE_CAPACITY );
-    MessageQueueT< std::string > queue_out( QUEUE_CAPACITY );
+    MessageQueueT<std::string> queue_in(QUEUE_CAPACITY);
+    MessageQueueT<std::string> queue_out(QUEUE_CAPACITY);
 
     {
-        std::vector< Thread > threads;
+        std::vector<Thread> threads;
 
-        threads.reserve( NUM_THREADS );
-        for( int i = 0; i < NUM_THREADS; ++i )
+        threads.reserve(NUM_THREADS);
+        for (int i = 0; i < NUM_THREADS; ++i)
         {
-            Task worker( new TestQueueTask( i + 1,
-                                            queue_in,
-                                            queue_out ) );
+            Task worker(new TestQueueTask(i + 1,
+                                          queue_in,
+                                          queue_out));
 
-            Thread new_thread( IThread::create( worker ) );
-            threads.push_back( new_thread );
+            Thread new_thread(IThread::create(worker));
+            threads.push_back(new_thread);
         }
 
         int num_messages_in = NUM_MESSAGES;
         int num_messages_out = NUM_MESSAGES;
 
-        while( num_messages_in > 0
-               || num_messages_out > 0 )
+        while (num_messages_in > 0
+                || num_messages_out > 0)
         {
 
-            if ( num_messages_in > 0 )
+            if (num_messages_in > 0)
             {
                 std::stringstream stream;
                 stream << "Message " << NUM_MESSAGES - num_messages_in;
 
-                std::size_t num = queue_in.push( stream.str( ) );
-                if ( num > 0 )
+                std::size_t num = queue_in.push(stream.str());
+                if (num > 0)
                 {
                     --num_messages_in;
-                    if( num < QUEUE_CAPACITY / 2 )
+                    if (num < QUEUE_CAPACITY / 2)
                     {
                         continue;
                     }
                 }
                 else
                 {
-                    sched_yield( );
+                    sched_yield();
                 }
             }
 
-            if ( num_messages_out > 0 )
+            if (num_messages_out > 0)
             {
                 std::string message;
-                std::size_t num = queue_out.pop( message, num_messages_in > 0 );
-                if( num > 0 )
+                std::size_t num = queue_out.pop(message, num_messages_in > 0);
+                if (num > 0)
                 {
                     std::stringstream str;
                     str << 0 << ": " << message
-                        << " #" << queue_in.size( )
-                        << ":" << queue_out.size( ) << std::endl;
-                    trace( str.str( ) );
+                            << " #" << queue_in.size()
+                            << ":" << queue_out.size() << std::endl;
+                    trace(str.str());
                     --num_messages_out;
                 }
                 else
                 {
-                    sched_yield( );
+                    sched_yield();
                 }
             }
         }
 
-        queue_in.cancel( );
+        queue_in.cancel();
 
-        for( auto& thread: threads )
+        for (auto &thread: threads)
         {
-            thread->join( );
-            thread.reset( );
+            thread->join();
+            thread.reset();
         }
     }
 }

@@ -55,13 +55,14 @@ public:
      * single thread at the same time. Threads can use mutexes to performs
      * operation on block of shared variables atomically.
      */
-    static IMutex* create( );
+    static IMutex *create();
 
     /**
      * @brief Destructor.
      */
-    virtual ~IMutex( )
-    { }
+    virtual ~IMutex()
+    {
+    }
 
     /**
      * @brief Locks the mutex.
@@ -69,17 +70,17 @@ public:
      * The calling thread try to get the exclusive ownership over the mutex or
      * wait until it manage to
      */
-    virtual void lock( ) = 0;
+    virtual void lock() = 0;
 
     /**
      * @brief Unlocks the mutex.
      */
-    virtual void unlock( ) = 0;
+    virtual void unlock() = 0;
 
     /**
      * @brief Returns the platform dependent handle associated to this object.
      */
-    virtual void* handle( ) = 0;
+    virtual void *handle() = 0;
 
 };
 
@@ -113,7 +114,7 @@ public:
      *
      * @ingroup threading-base raii
      */
-    typedef Locker< Mutex > Locker;
+    typedef Locker<Mutex> Locker;
 
     /**
      * @brief Default constructor.
@@ -121,9 +122,10 @@ public:
      * Builds a mutex calling the method @ref IMutex::create() and hosting the
      * returned abstract interface.
      */
-    Mutex( )
-        : m_mutex( IMutex::create( ) )
-    { }
+    Mutex()
+            : m_mutex(IMutex::create())
+    {
+    }
 
     /**
      * @brief Creates a mutex adapter from out of an abstract interface.
@@ -133,42 +135,42 @@ public:
      * @pre
      * -# Parameter @a imutex is not null.
      */
-    Mutex( IMutex* imutex )
-        : m_mutex( imutex )
+    Mutex(IMutex *imutex)
+            : m_mutex(imutex)
     {
-        assert( nullptr != m_mutex.get( ) );
+        assert(nullptr != m_mutex.get());
     }
 
     /**
      * @copydoc IMutex::lock()
      */
     void
-    lock( )
+    lock()
     {
-        m_mutex->lock( );
+        m_mutex->lock();
     }
 
     /**
      * @copydoc IMutex::unlock()
      */
     void
-    unlock( )
+    unlock()
     {
-        m_mutex->unlock( );
+        m_mutex->unlock();
     }
 
     /**
      * @brief Returns the abstract interface used by the adapter.
      */
-    IMutex*
-    interface( )
+    IMutex *
+    interface()
     {
-        return m_mutex.get( );
+        return m_mutex.get();
     }
 
 private:
 
-    std::shared_ptr< IMutex > m_mutex;
+    std::shared_ptr<IMutex> m_mutex;
 
     friend class CondPosix;
     friend class Cond;

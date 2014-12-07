@@ -39,79 +39,78 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // -----------------------------------------------------------------------------
 
-namespace
-{
+namespace {
 
 class TestTask
-    :
-    public ITask
+        :
+                public ITask
 {
 
     int m_id;
-    Mutex& m_mutex;
-    int& m_instance_counter;
-    int& m_execution_counter;
+    Mutex &m_mutex;
+    int &m_instance_counter;
+    int &m_execution_counter;
     int m_step;
 
     bool m_trace;
 
 public:
 
-    TestTask( int id,
-              Mutex& mutex,
-              int& instance_counter,
-              int& execution_counter )
-        :
-        m_id( id ),
-        m_mutex( mutex ),
-        m_instance_counter( instance_counter ),
-        m_execution_counter( execution_counter ),
-        m_step( 0 ),
-        m_trace( ( id % 100000 ) == 0 )
+    TestTask(int id,
+             Mutex &mutex,
+             int &instance_counter,
+             int &execution_counter)
+            :
+            m_id(id),
+            m_mutex(mutex),
+            m_instance_counter(instance_counter),
+            m_execution_counter(execution_counter),
+            m_step(0),
+            m_trace((id % 100000) == 0)
     {
         {
-            Locker< Mutex > locker( m_mutex );
+            Locker<Mutex> locker(m_mutex);
             ++m_instance_counter;
         }
 
-        trace_opt( "created" );
+        trace_opt("created");
     }
 
     virtual
-    ~TestTask( )
+    ~TestTask()
     {
         {
-            Locker< Mutex > locker( m_mutex );
-            assert( m_instance_counter > 0 );
+            Locker<Mutex> locker(m_mutex);
+            assert(m_instance_counter > 0);
             --m_instance_counter;
         }
 
-        trace_opt( "destroyed" );
+        trace_opt("destroyed");
 
-        assert( m_step == 1 );
+        assert(m_step == 1);
         ++m_step;
     }
 
     virtual void
-    execute( )
+    execute()
     {
         {
-            Locker< Mutex > locker( m_mutex );
+            Locker<Mutex> locker(m_mutex);
             ++m_execution_counter;
         }
 
-        trace_opt( "executed" );
+        trace_opt("executed");
 
-        assert( m_step == 0 );
+        assert(m_step == 0);
         ++m_step;
     }
 
     virtual void
-    trace_opt( std::string message ) const
+    trace_opt(std::string message) const
     {
-        if ( m_trace )
+        if (m_trace)
         {
-            trace( m_id, message );
+            trace(m_id, message);
         }
     }
 
@@ -122,14 +121,14 @@ public:
 // -----------------------------------------------------------------------------
 
 void
-test_ThreadPool( )
+test_ThreadPool()
 {
     const int NUM_THREADS = 16;
     const int NUM_TASKS = 1000000;
     const int QUEUE_CAPACITY = 100;
 
-    std::unique_ptr< IThreadPool > pool(
-                IThreadPool::create( NUM_THREADS, QUEUE_CAPACITY ) );
+    std::unique_ptr<IThreadPool> pool(
+            IThreadPool::create(NUM_THREADS, QUEUE_CAPACITY));
 
     Mutex mutex;
     int num_tasks_in = NUM_TASKS;
@@ -137,50 +136,49 @@ test_ThreadPool( )
     int instance_counter = 0;
     int execution_counter = 0;
 
-    while( num_tasks_in > 0
-           || num_tasks_out > 0 )
+    while (num_tasks_in > 0
+            || num_tasks_out > 0)
     {
 
-        if ( num_tasks_in > 0 )
+        if (num_tasks_in > 0)
         {
             int id = NUM_TASKS - num_tasks_in;
 
-            Task task( new TestTask( id, mutex, instance_counter,
-                                     execution_counter ) );
+            Task task(new TestTask(id, mutex, instance_counter,
+                                   execution_counter));
 
-            std::size_t num = pool->push( task );
-            if ( num > 0 )
+            std::size_t num = pool->push(task);
+            if (num > 0)
             {
                 --num_tasks_in;
             }
             else
             {
-                sched_yield( );
+                sched_yield();
             }
         }
 
-        if ( num_tasks_out > 0 )
+        if (num_tasks_out > 0)
         {
-            std::shared_ptr< TestTask > task;
-            std::size_t num = pool->pop( task, num_tasks_in > 0 );
-            if( num > 0 )
+            std::shared_ptr<TestTask> task;
+            std::size_t num = pool->pop(task, num_tasks_in > 0);
+            if (num > 0)
             {
-                task->trace_opt( "collected" );
+                task->trace_opt("collected");
                 --num_tasks_out;
             }
             else
             {
-                sched_yield( );
+                sched_yield();
             }
         }
 
     }
 
-    pool->join( );
+    pool->join();
 
-    assert( 0 == instance_counter );
-    assert( NUM_TASKS == execution_counter );
+    assert(0 == instance_counter);
+    assert(NUM_TASKS == execution_counter);
 }
 
 // -----------------------------------------------------------------------------
-

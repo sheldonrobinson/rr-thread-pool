@@ -88,29 +88,30 @@ public:
      * thread. The created thread is also taking ownership to the returned
      * object.
      */
-    static Thread create( Task task );
+    static Thread create(Task task);
 
     /**
      * @brief Returns an handle to control the current thread.
      */
-    static Thread self( );
+    static Thread self();
 
-   /**
-     * @brief Joins and destroys the object.
-     *
-     * Before destroying the object calls the method @ref join to ensure the
-     * handled thread is terminated.
-     *
-     * @pre
-     * -# The object cannot be destroyed by its own thread.
-     */
-    virtual ~IThread( )
-    { }
+    /**
+      * @brief Joins and destroys the object.
+      *
+      * Before destroying the object calls the method @ref join to ensure the
+      * handled thread is terminated.
+      *
+      * @pre
+      * -# The object cannot be destroyed by its own thread.
+      */
+    virtual ~IThread()
+    {
+    }
 
     /**
      * @brief Checks if the thread is still running.
      */
-    virtual bool is_running( ) const = 0;
+    virtual bool is_running() const = 0;
 
     /**
      * @brief Cancels and waits for thread termination.
@@ -118,7 +119,7 @@ public:
      * @pre
      * -# This method cannot be from the whole thread.
      */
-    virtual void join( ) = 0;
+    virtual void join() = 0;
 
     /**
      * @brief if supported by the platform implementation, passes the execution
@@ -127,12 +128,12 @@ public:
      * @pre
      * -# This method can be called only from the whole thread.
      */
-    virtual void yield( ) const = 0;
+    virtual void yield() const = 0;
 
     /**
      * @brief Returns the platform dependent handle associated to this object.
      */
-    virtual void* handle( ) = 0;
+    virtual void *handle() = 0;
 
 };
 

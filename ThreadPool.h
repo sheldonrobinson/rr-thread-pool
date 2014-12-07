@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
 class IThreadPool;
-typedef std::shared_ptr< IThreadPool > ThreadPool;
+typedef std::shared_ptr<IThreadPool> ThreadPool;
 
 /**
  * @brief General purpose thread pool for inter-thread communication.
@@ -69,9 +69,9 @@ public:
      *
      * @return The newly created thread pool.
      */
-    static IThreadPool* create( std::size_t num_threads,
-                                std::size_t task_capacity
-                                 = std::numeric_limits< std::size_t >::max( ) );
+    static IThreadPool *create(std::size_t num_threads,
+                               std::size_t task_capacity
+                               = std::numeric_limits<std::size_t>::max());
     /**
      * @brief Destructor.
      */
@@ -93,7 +93,7 @@ public:
      * - The parameter task is not null.
      * - The pool have not been cancelled.
      */
-    virtual std::size_t push( Task task ) = 0;
+    virtual std::size_t push(Task task) = 0;
 
     /**
      * @brief Pops one executed/cancelled task from the pool.
@@ -113,7 +113,7 @@ public:
      * @pre
      * - The pool have not been cancelled.
      */
-    virtual std::size_t pop( Task& task, bool blocking ) = 0;
+    virtual std::size_t pop(Task &task, bool blocking) = 0;
 
     /**
      * @brief Cancel the pool functionality indefinitely releasing any thread.
@@ -127,7 +127,7 @@ public:
      * @warning Doesn't wait for the peer threads to be released, just broadcast
      * a signal to them.
      */
-    virtual void cancel( ) = 0;
+    virtual void cancel() = 0;
 
     /**
      * @brief Cancel and wait for the termination of pool's threads.
@@ -139,7 +139,7 @@ public:
      * - The behaviour of this method if called during the task execution is
      *   undefined.
      */
-    virtual void join( ) = 0;
+    virtual void join() = 0;
 
     /**
      * @brief Convenient template method to pop executed tasks.
@@ -154,16 +154,16 @@ public:
      *
      * @copydetails pop(ITaskPtr& task, bool blocking)
      */
-    template< typename Derived >
-    std::size_t pop( std::shared_ptr< Derived > &task, bool blocking )
+    template<typename Derived>
+    std::size_t pop(std::shared_ptr<Derived> &task, bool blocking)
     {
         Task task_abstract;
-        std::size_t ret = pop( task_abstract, blocking );
-        if ( ret > 0 )
+        std::size_t ret = pop(task_abstract, blocking);
+        if (ret > 0)
         {
-            assert( task_abstract.get( ) != nullptr );
-            task = std::dynamic_pointer_cast< Derived >( task_abstract );
-            assert( task.get( ) == task_abstract.get( ) );
+            assert(task_abstract.get() != nullptr);
+            task = std::dynamic_pointer_cast<Derived>(task_abstract);
+            assert(task.get() == task_abstract.get());
         }
 
         return ret;
