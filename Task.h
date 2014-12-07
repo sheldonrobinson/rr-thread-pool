@@ -51,20 +51,20 @@ class ITask
 public:
 
     /**
-    * @brief Destructor.
-    */
+     * @brief Destructor.
+     */
     virtual ~ITask()
     {
     }
 
     /**
-    * @brief Executes the task.
-    */
+     * @brief Executes the task.
+     */
     virtual void execute() = 0;
 
     /**
-    * @brief Cancels the task.
-    */
+     * @brief Cancels the task.
+     */
     virtual void cancel()
     {
     }
