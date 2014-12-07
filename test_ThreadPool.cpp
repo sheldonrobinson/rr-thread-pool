@@ -161,7 +161,7 @@ test_ThreadPool()
         if (num_tasks_out > 0)
         {
             std::shared_ptr<TestTask> task;
-            std::size_t num = pool->pop(task, num_tasks_in > 0);
+            std::size_t num = pool->popT(task, num_tasks_in > 0);
             if (num > 0)
             {
                 task->trace_opt("collected");

@@ -154,7 +154,7 @@ public:
      */
     template<typename Derived>
     std::size_t
-    pop(std::shared_ptr<Derived> &message, bool blocking)
+    popT(std::shared_ptr<Derived> &message, bool blocking)
     {
         Message abstract_message;
         std::size_t ret = pop(abstract_message, blocking);

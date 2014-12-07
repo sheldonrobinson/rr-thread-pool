@@ -155,7 +155,7 @@ public:
      * @copydetails pop(ITaskPtr& task, bool blocking)
      */
     template<typename Derived>
-    std::size_t pop(std::shared_ptr<Derived> &task, bool blocking)
+    std::size_t popT(std::shared_ptr<Derived> &task, bool blocking)
     {
         Task task_abstract;
         std::size_t ret = pop(task_abstract, blocking);

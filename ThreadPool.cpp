@@ -65,7 +65,7 @@ public:
     {
         // For each fetched message:
         Task task;
-        while (m_input_queue.pop(task, true))
+        while (m_input_queue.popT(task, true))
         {
             task->execute();
             m_output_queue.push(task);
@@ -135,7 +135,7 @@ public:
         assert(!m_cancelled);
 
         // Fetches the next executed task in the form of message:
-        return m_output_queue->pop(task, blocking);
+        return m_output_queue->popT(task, blocking);
     }
 
     virtual void
@@ -159,7 +159,7 @@ public:
 
         // Transfers all pending tasks from the input queue to the output one:
         Task task;
-        while (m_input_queue->pop(task, false) > 0)
+        while (m_input_queue->popT(task, false) > 0)
         {
             m_output_queue->push(task);
         }
