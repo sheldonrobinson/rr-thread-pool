@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * This is a reference implementation of the Thread Pool design pattern.
  *
  * The implementation satisfy the following requirements:
- * - Modern C++ (shared pointers, RAII teqniques, clean code).
+ * - Modern C++ (shared pointers, RAII techniques, clean code).
  * - Easily portable over different platforms.
  * - Baseline, didactical and clean implementation  with no exoteric extras.
  *
@@ -49,19 +49,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /**
  * @defgroup threading-base Base
  *
- * This groop contains base (and low level) classes to implement multi-threaded
+ * This group contains base (and low level) classes to implement multi-threaded
  * application.
  *
  * On most common use-cases is better not to use this classes but choose to
- * use more elegant and evoluted classes like @ref MessageQueue and @ref
+ * use more elegant and evolved classes like @ref MessageQueue and @ref
  * ThreadQueue.
  */
 
 /**
  * @defgroup raii RAII
  *
- * This groop contains a set of classes designed to be used in order to write
- * code that follows the design guinelines described by the popular design
+ * This group contains a set of classes designed to be used in order to write
+ * code that follows the design guidelines described by the popular design
  * pattern @ref RAII.
  */
 

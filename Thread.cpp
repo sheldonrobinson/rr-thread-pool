@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Thread.h"
 
 #include "Cond.h"
-#include "Mutex.h"
 #include "Trace.h"
 
 #include <pthread.h>

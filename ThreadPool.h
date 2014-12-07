@@ -43,7 +43,7 @@ class IThreadPool;
 typedef std::shared_ptr< IThreadPool > ThreadPool;
 
 /**
- * @brief General pourpose thread pool for inter-thread communication.
+ * @brief General purpose thread pool for inter-thread communication.
  *
  * The class is defined as a pure abstract class with a factory method
  * (see @ref IMessageQueue::create) to build platform-specific implementations
@@ -85,7 +85,7 @@ public:
      *
      * @return
      * - On success, the number of tasks pending to be executed after the
-     *   insettion, that is at least @a one.
+     *   insertion, that is at least @a one.
      * - On failure, @a zero. This may happen if the maximum allowed capacity
      *   for pending tasks have been reached.
      *

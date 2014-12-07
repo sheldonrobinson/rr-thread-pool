@@ -81,11 +81,11 @@ public:
      * @brief Creates one new thread to execute one single task.
      *
      * @param task Shared pinter to a @ref ITask to be executed by the thread.
-     * The created thread also takes ownrership of the task during its
+     * The created thread also takes ownership of the task during its
      * execution.
      *
      * @return A shared pointer to an object to check and control the created
-     * thread. The chreated thread is also taking ownership to the returned
+     * thread. The created thread is also taking ownership to the returned
      * object.
      */
     static Thread create( Task task );
@@ -96,10 +96,10 @@ public:
     static Thread self( );
 
    /**
-     * @brief Joins and destroyes the object.
+     * @brief Joins and destroys the object.
      *
      * Before destroying the object calls the method @ref join to ensure the
-     * hanlded thread is terminated.
+     * handled thread is terminated.
      *
      * @pre
      * -# The object cannot be destroyed by its own thread.
@@ -130,7 +130,7 @@ public:
     virtual void yield( ) const = 0;
 
     /**
-     * @brief Returns the platform dependent handle assiciated to this object.
+     * @brief Returns the platform dependent handle associated to this object.
      */
     virtual void* handle( ) = 0;
 

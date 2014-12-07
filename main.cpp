@@ -27,18 +27,6 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "MessageQueue.h"
-#include "ThreadPool.h"
-#include "Trace.h"
-
-#include <iostream>
-#include <memory>
-#include <string>
-#include <sstream>
-#include <vector>
-
-// -----------------------------------------------------------------------------
-
 void test_Thread( );
 void test_MessageQueue( );
 void test_ThreadPool( );

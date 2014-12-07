@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
 
 /**
- * @brief Convenient template class adapter to safely acquire and relase
+ * @brief Convenient template class adapter to safely acquire and release
  * lockable objects.
  *
  * @param Lockable A class that implements methods @a lock and @a unlock.
@@ -79,7 +79,7 @@ public:
      * @brief Destructor.
      *
      * Also calls the method @a unlock on the target previously passed to the
-     * costructor.
+     * constructor.
      */
     ~Locker( )
     {

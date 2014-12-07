@@ -41,17 +41,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
 /**
- * @brief General pourpose message queue for inter-thread communication.
+ * @brief General purpose message queue for inter-thread communication.
  *
- * This class uses run-time polimorfism to allow message-driven communication
- * and syncronization between two or more threads.
+ * This class uses run-time polymorphism to allow message-driven communication
+ * and synchronization between two or more threads.
  *
  * The class is defined as a pure abstract class with a factory method
  * (see @ref IMessageQueue::create) to build platform-specific implementations
  * of the queue while maintaining a platform-agnostic interface.
  *
  * @note
- * - Only one method of this class can (optionaly) block the calling thread:
+ * - Only one method of this class can (optionally) block the calling thread:
  *   @ref IMessageQueue::pop.
  * - This class is 100% thread safe.
  */
@@ -173,15 +173,15 @@ public:
 // ----------------------------------------------------------------------------
 
 /**
- * @brief General pourpose message queue for inter-thread communication.
+ * @brief General purpose message queue for inter-thread communication.
  *
- * This template class uses compile-time polimorfism to allow message-driven
- * communication and syncronization between two or more threads.
+ * This template class uses compile-time polymorphism to allow message-driven
+ * communication and synchronization between two or more threads.
  *
- * The implementaion of this template is based on @ref IMessageQueue class.
+ * The implementation of this template is based on @ref IMessageQueue class.
  *
  * @note
- * - Only one method of this class can (optionaly) block the calling thread:
+ * - Only one method of this class can (optionally) block the calling thread:
  *   @ref IMessageQueue::pop.
  * - This class is 100% thread safe.
  */
@@ -286,7 +286,7 @@ MessageQueueT< M >::MessageQueueT( std::size_t max_capacity )
 
 template< typename M >
 std::size_t
-MessageQueueT< M >::pop( M& dst_message, bool blocking )
+MessageQueueT<M>::pop(M &dst_message, bool blocking)
 {
     Message abstract_message;
     std::size_t ret = m_impl->pop( abstract_message, blocking );
@@ -295,8 +295,9 @@ MessageQueueT< M >::pop( M& dst_message, bool blocking )
     {
         assert( nullptr != abstract_message.get( ) );
 
+        typedef MessageImpl<M> Implementation;
         auto message =
-              std::dynamic_pointer_cast< MessageImpl< M > >( abstract_message );
+              std::dynamic_pointer_cast<Implementation>( abstract_message );
         assert( message.get( ) == abstract_message.get( ) );
 
         dst_message = message->m_payload;

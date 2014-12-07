@@ -77,7 +77,7 @@ public:
     virtual void unlock( ) = 0;
 
     /**
-     * @brief Returns the platform dependent handle assiciated to this object.
+     * @brief Returns the platform dependent handle associated to this object.
      */
     virtual void* handle( ) = 0;
 

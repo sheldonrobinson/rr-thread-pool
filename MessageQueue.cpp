@@ -32,13 +32,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Cond.h"
 
 #include <deque>
-#include <assert.h>
 
 // -----------------------------------------------------------------------------
 
 class MessageQueueImpl: public IMessageQueue
 {
-    typedef Locker< Mutex > Locker;
+    typedef Locker<Mutex> Locker;
 
     std::size_t m_max_capacity;
     volatile bool m_cancelled;
@@ -49,10 +48,10 @@ class MessageQueueImpl: public IMessageQueue
 
 public:
 
-    MessageQueueImpl( std::size_t max_capacity )
-        :
-        m_max_capacity( max_capacity ),
-        m_cancelled( false )
+    MessageQueueImpl(std::size_t max_capacity)
+            :
+            m_max_capacity(max_capacity),
+            m_cancelled(false)
     { }
 
     // -------------------------------------------------------------------------
@@ -73,7 +72,7 @@ public:
         {
             Locker locker( m_mutex );
 
-            while ( !m_cancelled ) // <- while needed because of spourious wake-ups.
+            while ( !m_cancelled ) // <- while needed because of spurious wake-ups.
             {
                 ret = m_queue.size( );
                 if ( ret > 0 )

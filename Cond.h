@@ -44,7 +44,7 @@ class Mutex;
 // ------------------------------------------------------------------------
 
 /**
- * @brief A condition variable to allow sincronization between threads.
+ * @brief A condition variable to allow synchronization between threads.
  *
  * Condition variables are synchronization primitives to allow threads to
  * wait until a particular condition occurs.
@@ -59,16 +59,16 @@ public:
     /**
      * @brief Creates one new condition variable.
      */
-    static ICond* create( );
+    static ICond* create();
 
     /**
      * @brief Destructor.
      */
-    virtual ~ICond( )
+    virtual ~ICond()
     { }
 
     /**
-     * @brief The calling thread will wait until the contition variable is
+     * @brief The calling thread will wait until the condition variable is
      * signaled by another thread.
      *
      * This method atomically performs this steps:
@@ -85,7 +85,7 @@ public:
      * @post
      * -# The passed mutex is locked back by the calling thread.
      */
-    virtual void wait( IMutex* mutex ) = 0;
+    virtual void wait(IMutex* mutex) = 0;
 
     /**
      * @brief Resumes at least one single thread that is waiting for the
@@ -93,19 +93,19 @@ public:
      *
      * Calling the method without no threads waiting for signals have no effect.
      */
-    virtual void signal( ) = 0;
+    virtual void signal() = 0;
 
     /**
      * @brief Resumes all threads that are waiting for the condition.
      *
      * Calling the method without no threads waiting for signals have no effect.
      */
-    virtual void broadcast( ) = 0;
+    virtual void broadcast() = 0;
 
     /**
-     * @brief Returns the platform dependent handle assiciated to this object.
+     * @brief Returns the platform dependent handle associated to this object.
      */
-    virtual void* handle( ) = 0;
+    virtual void* handle() = 0;
 
 };
 
@@ -115,7 +115,7 @@ public:
  * @brief Convenient adapter for class @ref ICond.
  *
  * @note
- * This class is usefull to write code that follow the design pattern
+ * This class is useful to write code that follow the design pattern
  *
  * @see @ref RAII "Resource Acquisition Is Initialization"
  *
@@ -133,8 +133,8 @@ public:
      * and then hosts the returned abstract interface to destroy it during the
      * object destruction.
      */
-    Cond( )
-        : m_cond( ICond::create( ) )
+    Cond()
+        : m_cond(ICond::create())
     { }
 
     /**
@@ -145,51 +145,47 @@ public:
      * @pre
      * -# Parameter @a icond is not null.
      */
-    Cond( ICond* icond )
-        : m_cond( icond )
+    Cond(ICond* icond)
+        : m_cond(icond)
     {
-       assert( nullptr != m_cond.get( ) );
+       assert(nullptr != m_cond.get());
     }
 
     /**
      * @copydoc ICond::wait
      */
-    void
-    wait( Mutex& mutex )
+    void wait(Mutex& mutex)
     {
-        m_cond->wait( mutex.interface( ) );
+        m_cond->wait(mutex.interface());
     }
 
     /**
      * @copydoc ICond::signal
      */
-    void
-    signal( )
+    void signal()
     {
-        m_cond->signal( );
+        m_cond->signal();
     }
 
     /**
      * @copydoc ICond::broadcast
      */
-    void
-    broadcast( )
+    void broadcast()
     {
-        m_cond->broadcast( );
+        m_cond->broadcast();
     }
 
     /**
      * @brief Returns the abstract interface used by the adapter.
      */
-    ICond*
-    interface( )
+    ICond* interface()
     {
-        return m_cond.get( );
+        return m_cond.get();
     }
 
 private:
 
-    std::unique_ptr< ICond > m_cond;
+    std::unique_ptr<ICond> m_cond;
 
 };
 
