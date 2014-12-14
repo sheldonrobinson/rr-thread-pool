@@ -43,6 +43,8 @@ typedef std::shared_ptr<ITask> Task;
 /**
  * @brief Abstract class to be implemented to describe a task that need to be
  * executed.
+ *
+ * @ingroup threading-high
  */
 class ITask
     : public IMessage
@@ -73,22 +75,39 @@ public:
 
 // -----------------------------------------------------------------------------
 
+/**
+ * @brief A task that executes a function.
+ *
+ * @tparam Function A function class that can be called without any parameter.
+ *
+ * @ingroup threading-high
+ */
 template<typename Function>
-class TaskFunc
+class TaskFunction
         : public ITask
 {
-    Function &m_predicate;
+    Function &m_function;
 
 public:
 
-    TaskFunc(Function &predicate)
-            : m_predicate(predicate)
+    /**
+     * @brief Constructs the task from a passed function.
+     *
+     * Takes a reference to the function in order to call it later.
+     */
+    TaskFunction(Function &function)
+            : m_function(function)
     {
     }
 
+    /**
+     * @copybrief ITask::execute
+     *
+     * Calls the function without any parameter.
+     */
     virtual void execute()
     {
-        m_predicate();
+        m_function();
     }
 
 };

@@ -39,10 +39,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @brief Convenient template class adapter to safely acquire and release
  * lockable objects.
  *
- * @param Lockable A class that implements methods @a lock and @a unlock.
+ * @tparam Lockable A class that implements methods @a lock() and @a unlock().
  *
  * @see
- * - @ref Mutex::Lockable, template specialization for @ref Mutex.
+ * - @ref Mutex::Locker, template specialization for @ref Mutex.
  * - @ref RAII "Resource Acquisition Is Initialization"
  *
  * @ingroup raii

@@ -40,6 +40,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
 class IThreadPool;
+
+/**
+ * @brief Shared pointer for abstract interface @ref IThreadPool.
+ *
+ * @see @ref RAII "Resource Acquisition Is Initialization"
+ *
+ * @ingroup threading-high
+ */
 typedef std::shared_ptr<IThreadPool> ThreadPool;
 
 /**
@@ -50,6 +58,8 @@ typedef std::shared_ptr<IThreadPool> ThreadPool;
  * of the queue while maintaining a platform-agnostic interface.
  *
  * The class is 100% thread safe.
+ *
+ * @ingroup threading-high
  */
 class IThreadPool
 {
@@ -101,7 +111,7 @@ public:
      * @param[out] task Smart pointer that will be reset with the popped
      *             task in case of success.
      *
-     * @param block If set to @a true the method blocks the current thread
+     * @param blocking If set to @a true the method blocks the current thread
      *        indefinitely until a new task have been executed or the pool
      *        have been cancelled.
      *

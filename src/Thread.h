@@ -44,7 +44,7 @@ class IThread;
  *
  * @see @ref RAII "Resource Acquisition Is Initialization"
  *
- * @ingroup threading-base raii
+ * @ingroup threading-base
  */
 typedef std::shared_ptr< IThread > Thread;
 

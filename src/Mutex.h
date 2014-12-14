@@ -102,7 +102,7 @@ public:
    ...
    @endcode
  *
- * @ingroup threading-base raii
+ * @ingroup threading-base
  */
 class Mutex
 {
@@ -112,7 +112,7 @@ public:
     /**
      * @brief Convenient typedef for a @ref Locker that locks a @ref Mutex.
      *
-     * @ingroup threading-base raii
+     * @ingroup threading-base
      */
     typedef Locker<Mutex> Locker;
 

@@ -54,6 +54,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Only one method of this class can (optionally) block the calling thread:
  *   @ref IMessageQueue::pop.
  * - This class is 100% thread safe.
+ *
+ * @ingroup threading-high
  */
 class IMessageQueue
 {
@@ -185,6 +187,8 @@ public:
  * - Only one method of this class can (optionally) block the calling thread:
  *   @ref IMessageQueue::pop.
  * - This class is 100% thread safe.
+ *
+ * @ingroup threading-high
  */
 template<typename M>
 class MessageQueueT
@@ -203,9 +207,9 @@ public:
                                      = std::numeric_limits<std::size_t>::max());
 
     /**
-    * @brief Pops one message from the queue.
+     * @brief Pops one message from the queue.
      *
-     * @param[out] message A reference to a message object meant to be set
+     * @param[out] dst_message A reference to a message object meant to be set
      *             with the extracted message only in case of success.
      *
      * @param block If set to @a true the method blocks the current thread

@@ -37,11 +37,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class IMessage;
 
+/**
+* @brief Shared pointer for abstract interface @ref IMessage.
+*
+* @see @ref RAII "Resource Acquisition Is Initialization"
+*
+* @ingroup threading-high
+*/
 typedef std::shared_ptr<IMessage> Message;
 
 /**
  * @brief Abstract class to be implemented to describe a Message that need to be
  * executed.
+ *
+ * @ingroup threading-high
  */
 class IMessage
 {
@@ -59,4 +68,4 @@ public:
 
 // -----------------------------------------------------------------------------
 
-#endif // Message_H
+#endif // MESSAGE_H

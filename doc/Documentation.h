@@ -47,22 +47,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
- * @defgroup threading-base Base
+ * @defgroup threading-high High level concurrency
  *
- * This group contains base (and low level) classes to implement multi-threaded
- * application.
+ * @brief Contains classes too be used in concurrent applications with a good
+ * level of abstraction.
  *
- * On most common use-cases is better not to use this classes but choose to
- * use more elegant and evolved classes like @ref MessageQueue and @ref
- * ThreadQueue.
+ * Implements common concurrency design patterns:
+ * - Message queues (see @ref IMessageQueue).
+ * - Thread pools (see @ref IThreadPool).
+ */
+
+/**
+ * @defgroup threading-base Low level concurrency
+ *
+ * @brief Contains low level classes to implement multi-threaded applications.
  */
 
 /**
  * @defgroup raii RAII
  *
- * This group contains a set of classes designed to be used in order to write
- * code that follows the design guidelines described by the popular design
- * pattern @ref RAII.
+ * @brief Helper classes used to follow @ref RAII coding paradigm.
  */
 
 /**

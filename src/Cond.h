@@ -120,7 +120,7 @@ public:
  *
  * @see @ref RAII "Resource Acquisition Is Initialization"
  *
- * @ingroup threading-base raii
+ * @ingroup threading-base
  */
 class Cond
 {
