@@ -1,5 +1,5 @@
-/*
-Copyright (c) 2013, Riccardo Ressi
+/**
+Copyright (c) 2015, Riccardo Ressi
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -27,32 +27,18 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef TRACE_H
-#define TRACE_H
+#ifndef TEST_UTILS_H
+#define TEST_UTILS_H
 
-#include <string>
 #include <sstream>
 
-// -----------------------------------------------------------------------------
+#define TEST_CHECK(c) \
+    if (c != true) \
+    { \
+        std::stringstream message; \
+        message << "Test failied " << #c; \
+        message << "(" << __FILE__ << ":" << __LINE__ << ")"; \
+        throw std::runtime_error(message.str()); \
+    }
 
-void trace_set(bool active);
-
-void trace(std::string message);
-
-void trace(int id, std::string message);
-
-inline void trace(std::stringstream& builder)
-{
-    trace(builder.str());
-    builder.str(std::string());
-}
-
-inline void trace(int id, std::stringstream& builder)
-{
-    trace(id, builder.str());
-    builder.str(std::string());
-}
-
-// -----------------------------------------------------------------------------
-
-#endif // TRACE_H
+#endif

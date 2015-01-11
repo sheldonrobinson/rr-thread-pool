@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "ThreadPool.h"
+#include "test_Utils.h"
 
 #include "Trace.h"
-#include "MessageQueue.h"
 #include "Mutex.h"
 
 #include <iostream>
@@ -81,13 +81,13 @@ public:
     {
         {
             Locker<Mutex> locker(m_mutex);
-            assert(m_instance_counter > 0);
+            TEST_CHECK(m_instance_counter > 0);
             --m_instance_counter;
         }
 
         trace_opt("destroyed");
 
-        assert(m_step == 1);
+        TEST_CHECK(m_step == 1);
         ++m_step;
     }
 
@@ -101,7 +101,7 @@ public:
 
         trace_opt("executed");
 
-        assert(m_step == 0);
+        TEST_CHECK(m_step == 0);
         ++m_step;
     }
 
@@ -177,8 +177,8 @@ test_ThreadPool()
 
     pool->join();
 
-    assert(0 == instance_counter);
-    assert(NUM_TASKS == execution_counter);
+    TEST_CHECK(0 == instance_counter);
+    TEST_CHECK(NUM_TASKS == execution_counter);
 }
 
 // -----------------------------------------------------------------------------

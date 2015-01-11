@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "MessageQueue.h"
-#include "Mutex.h"
 #include "Thread.h"
 #include "Trace.h"
 
@@ -37,8 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <sstream>
 #include <vector>
-
-#include <assert.h>
 
 // ------------------------------------------------------------------------....
 

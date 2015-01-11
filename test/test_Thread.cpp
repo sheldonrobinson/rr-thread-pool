@@ -29,15 +29,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "Thread.h"
+#include "test_Utils.h"
 
 #include "Cond.h"
 #include "Mutex.h"
 #include "Trace.h"
 
-#include <assert.h>
-
 #include <iostream>
-#include <string>
 #include <vector>
 
 // -----------------------------------------------------------------------------
@@ -110,7 +108,7 @@ test_base()
         {
             Task new_task = std::make_shared<TestBaseTask>(
                     i + 1, mutex, instance_counter, execution_counter);
-            assert(instance_counter >= 1);
+            TEST_CHECK(instance_counter >= 1);
 
             Thread new_thread(IThread::create(new_task));
             threads.push_back(new_thread);
@@ -121,10 +119,10 @@ test_base()
             thread->join();
         }
 
-        assert(NUM_THREADS == execution_counter);
+        TEST_CHECK(NUM_THREADS == execution_counter);
     }
 
-    assert(0 == instance_counter);
+    TEST_CHECK(0 == instance_counter);
 }
 
 // -----------------------------------------------------------------------------
@@ -237,13 +235,13 @@ test_join()
                     cond_signal,
                     instance_counter,
                     execution_counter);
-            assert(instance_counter >= 1);
+            TEST_CHECK(instance_counter >= 1);
 
             Thread new_thread(IThread::create(new_task));
             threads.push_back(new_thread);
         }
-        assert(0 == execution_counter);
-        assert(NUM_THREADS == instance_counter);
+        TEST_CHECK(0 == execution_counter);
+        TEST_CHECK(NUM_THREADS == instance_counter);
 
         {
             Locker<Mutex> locker(mutex);
@@ -258,10 +256,10 @@ test_join()
             trace(i + 1, "joined");
         }
         trace("Done.");
-        assert(NUM_THREADS == execution_counter);
+        TEST_CHECK(NUM_THREADS == execution_counter);
     }
 
-    assert(0 == instance_counter);
+    TEST_CHECK(0 == instance_counter);
 }
 
 } // anonymous namespace
