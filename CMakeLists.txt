@@ -29,6 +29,7 @@ add_executable(tp-ut
     $<TARGET_OBJECTS:tp-lib>
     test/test_Main.cpp
     test/test_MessageQueue.cpp
+    test/test_PI.cpp
     test/test_Thread.cpp
     test/test_ThreadPool.cpp)
 

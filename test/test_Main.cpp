@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Trace.h>
 
+void test_PI();
 void test_Thread();
 void test_MessageQueue();
 void test_ThreadPool();
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
     test_Thread();
     test_MessageQueue();
     test_ThreadPool();
+    test_PI();
 
     return 0;
 }
